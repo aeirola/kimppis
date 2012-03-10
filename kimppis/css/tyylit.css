@@ -1,0 +1,218 @@
+* {
+  margin: 0;
+  padding: 0;
+  }
+
+html,body {
+  margin:0;
+  padding:0;
+  background: #1a1a1a url('../images/tausta.jpg') no-repeat fixed 50% 0;
+  height:100%;
+  }
+
+body {
+  font: 80% "Helvetica Neue", Helvetica, Arial, Verdana, sans-serif;
+  color: #c9c9c9;
+  text-align:center;
+  }
+
+img {
+  border: 0px;
+  }
+
+a {
+  text-decoration: none;
+  color: #cfae00;	
+  }
+
+a:hover {
+  text-decoration: underline;
+  color: #cfae00;
+  }
+
+#kehyslaaja {
+  text-align:center;
+  width:1000px;
+  height: 800px;
+  /* background: url('../images/testikiekura.png') no-repeat; */
+  margin:0 auto;
+  z-index:1;
+  }
+
+#kehysnormi {
+  margin:0 auto;
+  width: 800px;	
+  }
+
+#otsake {
+  text-align: left;
+  margin: 30px 0px 25px 0px;	
+  }
+
+#laatikko {
+  margin: 6px 10px 6px 10px;
+  }
+
+#toinenlaatikko {
+  width: 100%;
+  clear: both;
+  padding: 50px 10px 5px 10px;
+  /* margin: 30px 10px 6px 10px; */
+  }
+
+
+.palstat {
+  margin-top: 25px;	
+  }
+
+.palstat h2 {
+  margin: 0px 10px 10px 10px;
+}
+
+.palstat p {
+  margin: 10px 10px 10px 10px;	
+  line-height: 1.4;
+  }
+
+.haalea img {
+  opacity: 0.25;	
+  }
+
+.haalea img:hover {
+  opacity: 0.90;
+  }
+
+.vasen, .keski, .oikea {
+  text-align: left;
+  float:left;
+  position:relative;
+  width:235px;
+  padding:15px;
+  margin-bottom: 20px;
+  }
+
+.v1, .v2, .o1, .o2 {
+  text-align: left;
+  float:left;
+  position:relative;
+  width:160px;
+  padding:20px;
+  margin-bottom: 20px;
+  }
+
+.valokuva {
+  margin: 0px 0px 10px 0px;
+}
+
+.name {
+  font-size: 120%;
+  font-weight: bold;
+}
+
+.tummateksti {
+  color: #6c6c6c;	
+  }
+
+.tummateksti a {
+  color: #6c6c6c;	
+  }
+
+.tummateksti a:hover {
+  color: #ccc;
+  text-decoration: none;	
+  }
+
+.palstat input[type=submit] {
+  background-color: #cc0066; 
+  border: 7px solid #cc0066; 
+  font: bold 105% helvetica,arial,verdana; 
+  color: #fff; 
+  height: 2.5em; 
+  border-radius: 5px; 
+  -moz-border-radius: 5px; 
+  -webkit-border-radius: 5px;	
+  }
+
+.palstat input[type=submit]:hover {
+  background-color: #ff3399;
+  border: 7px solid #ff3399;
+  }
+
+#ala {
+  clear: both;
+  margin-top: 40px;
+  color: #666;	
+  }
+
+#map {
+  width: 780px;
+  height: 311px;	
+  }
+
+#overlay {
+  margin: 0;
+  padding: 0;
+  height: 100px;
+  width: 100px;
+  z-index: 2;
+  margin-left: 702px;
+  position: absolute;
+  background-image: url('../images/sydan-overlay.png');
+  background-repeat: no-repeat;
+  background-position: -692px 5px;
+  }
+
+.mapinfo {
+  text-align: left;
+  color: #000;	
+  }
+
+
+.rasti {
+  vertical-align: top;
+  padding-right: 3px;	
+  }
+
+#ilmolomake input[type=text] {
+  margin: 4px 0px 12px 0px; padding: 3px; width: 95%; font: 100% "Lucida Grande", "Lucida Sans Unicode", Arial, Verdana, sans-serif; color: #000; border: 1px solid #fff;
+  }
+
+#ilmolomake input[type=text].virhe {
+  border: 3px solid #000;
+  color: red;
+  }
+
+#ilmolomake input[type=submit] {
+  margin-top: 15px;
+  background-color: #000; 
+  border: 7px solid #000; 
+  font: bold 105% helvetica,arial,verdana; 
+  color: #ccc; 
+  height: 2.5em; 
+  border-radius: 5px; 
+  -moz-border-radius: 5px; 
+  -webkit-border-radius: 5px;
+  }
+
+#ilmolomake input[type=submit]:hover {
+  background-color: #333; 
+  border: 7px solid #333;
+  color: #fff;
+  }
+
+#footer {
+  position: relative; 
+  margin-top: -30px; 
+  border-top: 4px solid #2b2b2b; 
+  height: 340px; 
+  width: 100%; 
+  clear: both; 
+  text-align: center; 
+  background-color: #313131;	
+  }
+
+#kaistale {
+  width: 800px; 
+  text-align: center; 
+  margin: 0 auto;	
+  }
