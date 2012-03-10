@@ -234,12 +234,10 @@
 			</div>
 		</div>
 	</div>
-        
-		
-		
-		<script>
+
+	<script>
 		// Constants
-		var SERVER = 'http://marvin.dy.fi:8080/rest'
+		var SERVER = 'http://kimppis.dy.fi:80/rest'
 		
 		// Variables
 		var persons = 1;
@@ -783,6 +781,23 @@
 			'01750': "Keimola",
 			'01760': "Männikkö, Pirttiranta, Seutula, Koivikko, Tapola",
 		}
+		
+		// Analytics
+		$('[data-role=page]').live('pageshow', function (event, ui) {
+		    try {
+		        _gaq.push(['_setAccount', 'YOUR_GA_ID']);
+
+		        hash = location.hash;
+
+		        if (hash) {
+		            _gaq.push(['_trackPageview', hash.substr(1)]);
+		        } else {
+		            _gaq.push(['_trackPageview']);
+		        }
+		    } catch(err) {
+				console.log(err);
+		    }
+		});
 		</script>
     </body>
 </html>
