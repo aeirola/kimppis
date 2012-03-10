@@ -10,9 +10,6 @@ var fs = require("fs");
 // DB
 var mongoose = require('mongoose');
 
-// Utils
-var util = require('util');
-
 // Options
 var settings = {
     name: 'kimppis',
@@ -169,7 +166,7 @@ router.map(function () {
     /**
     * Say Welcome to the user or dispay eany other info
     */
-    this.root.bind(function (req, res) { res.send(util.format("Welcome to %s", settings.name)) });
+    this.root.bind(function (req, res) { res.send("Welcome to "+ settings.name) });
 
     /**
     * Hanlde _GET
@@ -499,4 +496,4 @@ init = function() {
 // Init stuff
 init();
 
-console.log(util.format('%s running at %s:%s/', settings.name, settings.http.host, settings.http.port));
+console.log(settings.name + ' running at ' + settings.http.host + ":" + settings.http.port + "/");
