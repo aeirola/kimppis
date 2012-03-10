@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>
+        </title>
+        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.css" />
+        <style>
+            /* App custom styles */
+		  td {
+		    padding: 0px 10px 5px 0px;
+		    vertical-align: top;	
+		  }
+        </style>
+        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js">
+        </script>
+        <script src="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.js">
+        </script>
+    </head>
+    <body>
+        <div data-role="page" id="page1">
+            <div data-theme="a" data-role="header">
+                <h3>
+                    Destination
+                </h3>
+                <a data-role="button" data-transition="flip" href="#page2" class="ui-btn-right">
+                    Settings
+                </a>
+            </div>
+            <div data-role="content">
+                <h1>Map goes here</h1>
+                <a data-role="button" data-transition="slide" href="#page3">
+                    Selected
+                </a>
+            </div>
+        </div>
+
+        <div data-role="page" id="page2">
+            <div data-theme="a" data-role="header">
+                <h3>
+                    Settings
+                </h3>
+                <a data-role="button" data-rel="back" data-direction="reverse" data-transition="slide" href="#page1">
+                    Back
+                </a>
+            </div>
+            <div data-role="content">
+                <div data-role="fieldcontain">
+                    <fieldset data-role="controlgroup" data-type="vertical">
+                        <legend>
+                            Size of your group:
+                        </legend>
+                        <input name="radiobuttons1" id="radio1" value="radio1" type="radio" selected="selected" checked="checked"/>
+                        <label for="radio1">
+                            1 person
+                        </label>
+                        <input name="radiobuttons1" id="radio2" value="radio2" type="radio" />
+                        <label for="radio2">
+                            2 persons
+                        </label>
+                        <input name="radiobuttons1" id="radio3" value="radio3" type="radio" />
+                        <label for="radio3">
+                            3 persons
+                        </label>
+                        <input name="radiobuttons1" id="radio4" value="radio4" type="radio" />
+                        <label for="radio4">
+                            4 persons
+                        </label>
+                    </fieldset>
+                </div>
+               <div class="ui-grid-a">
+                    <div class="ui-block-a">
+                        <p>
+                            Looking for<br /> Kimppis buddies?
+                        </p>
+                    </div>
+                    <div class="ui-block-b">
+                        <div data-role="fieldcontain">
+                            <fieldset data-role="controlgroup">
+                                <label for="toggleswitch1">
+                                </label>
+                                <select name="toggleswitch1" id="toggleswitch1" data-theme="" data-role="slider">
+                                    <option value="off">
+                                        No
+                                    </option>
+                                    <option value="on" selected="selected">
+                                        Yes
+                                    </option>
+                                </select>
+                            </fieldset>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div data-role="page" id="page3">
+            <div data-theme="a" data-role="header">
+                <h3>
+                    My Kimppis
+                </h3>
+                <a data-role="button" data-direction="reverse" data-transition="slide" href="#page1">
+                    Back
+                </a>
+                <a data-role="button" data-transition="flip" href="#page2" class="ui-btn-right">
+                    Map
+                </a>
+            </div>
+            <div data-role="content">
+                <table>
+	               <tr><td><strong>From</strong></td><td>Central Railway Station</td></tr>
+	               <tr><td><strong>To</strong></td><td>Otaniemi</td></tr>
+                    <tr><td></td><td></td></tr>
+	               <tr><td colspan="2"><h3>Found 2 Kimppis buddies to share a taxi with you!</h3></td></tr>
+                    <tr><td></td><td></td></tr>
+	               <tr><td><strong>Price</strong></td><td>
+		              <table>
+			             <tr><td>Normal:</td><td>23,30 €</td></tr>
+			             <tr><td><strong>Kimppis:</strong></td><td><strong>9,20 €</strong></td>
+				        <tr><td>You save:</td><td>14,10 €!</td>
+		              </table>
+		          </td></tr>
+	           </table>
+                <a data-role="button" data-transition="slide" href="#page4">
+                    Accept
+                </a>
+            </div>
+        </div>
+
+        <div data-role="page" id="page4">
+            <div data-theme="a" data-role="header">
+                <h3>
+                    Find buddies
+                </h3>
+                <a data-role="button" data-direction="reverse" data-transition="slide" href="#page3">
+                    Back
+                </a>
+            </div>
+            <div data-role="content">
+                <img src="img/kimppis02.png" alt="" />
+                <h3>Please lift your phone to find your buddies!</h3>
+                <a data-role="button" data-transition="slide" href="#page5">
+                    Ready!
+                </a>
+            </div>
+        </div>
+
+        <div data-role="page" id="page5">
+            <div data-theme="a" data-role="header">
+                <h3>
+                    Find buddies
+                </h3>
+                <a data-role="button" data-direction="reverse" data-transition="slide" href="#page4">
+                    Back
+                </a>
+            </div>
+            <div data-role="content">
+	           <a data-transition="slide" href="#page6"><img src="img/kimppis-flash.gif" alt="" /></a>
+            </div>
+        </div>
+
+        <div data-role="page" id="page6">
+            <div data-theme="a" data-role="header">
+                <h3>
+                    Fare breakdown
+                </h3>
+                <a data-role="button" data-direction="reverse" data-transition="slide" href="#page5">
+                    Back
+                </a>
+                <a data-role="button" data-transition="flip" href="#page7" class="ui-btn-right">
+                    Route
+                </a>
+            </div>
+            <div data-role="content">
+                <h3>Destinations</h3>
+                <table style="width: 100%;">
+	               <tr><td><strong>You</strong> (10,3 km)</td><td style="float:right;"><strong>9,20 €</strong></td></tr>
+	               <tr><td colspan="2">Betonimiehenkuja 3, Espoo</td></tr>
+	               <tr><td colspan="2"><hr /></td></tr>
+	               <tr><td><strong>Buddy 1</strong> (12,2 km)</td><td style="float:right;"><strong>11,00 €</strong></td></tr>
+	               <tr><td colspan="2">Tapionaukio 3, Espoo</td></tr>
+	               <tr><td colspan="2"><hr /></td></tr>
+	               <tr><td><strong>Buddy 2</strong> (16,3 km)</td><td style="float:right;"><strong>14,70 €</strong></td></tr>
+	               <tr><td colspan="2">Sakkolantie 1, Espoo</td></tr>
+	               <tr><td colspan="2"><hr /></td></tr>
+	               <tr><td><strong>TOTAL</strong> (16,3 km)</td><td style="float:right;"><strong>34,90 €</strong></td></tr>
+	               <tr><td></td><td></td></tr>
+	           </table>
+            </div>
+        </div>
+
+
+        <div data-role="page" id="page7">
+            <div data-theme="a" data-role="header">
+                <h3>
+                    Route
+                </h3>
+                <a data-role="button" data-rel="back" data-direction="reverse" data-transition="slide" href="#page6">
+                    Back
+                </a>
+            </div>
+            <div data-role="content">
+                <h1>Route map</h1>
+            </div>
+        </div>
+        <script>
+            //App custom javascript
+        </script>
+    </body>
+</html>
