@@ -196,8 +196,7 @@
             </div>
         </div>
 
-
-        <div data-role="page" id="page7">
+		<div class="content" data-role="page" id="page7">
             <div data-theme="a" data-role="header">
                 <h3>
                     Route
@@ -206,9 +205,9 @@
                     Back
                 </a>
             </div>
-            <div data-role="content">
-	            <div data-role="content">
-					<div id="route_map_canvas" style="width:500px;height:500px"></div>
+            <div class="content"  data-role="content">
+	            <div class="content" data-role="content">
+					<div class="content" id="route_map_canvas" style="width:100%;height:100%"></div>
 	            </div>
             </div>
         </div>
@@ -217,7 +216,7 @@
 		
 		<script>
 		// Constants
-		var SERVER = 'http://marvin.dy.fi:8080'
+		var SERVER = 'http://marvin.dy.fi:8080/rest'
 		
 		// Variables
 		var persons = 1;
@@ -230,7 +229,7 @@
 		var directionsRenderer;
 		
 		var own_index = null;
-		var route = {};
+		var route = null;
 		var route_points = [];
 		var total_data = {}
 		var directions_result = null;
@@ -313,6 +312,14 @@
 		 * Page 3 (Route data)
 		 */
         $('#page3').live("pageshow", function() {
+			if (route) {
+				return;
+			}
+			
+			if (!position_latLng || !destination_latLng) {
+				return;
+			}
+			
 			// Update form / to
 			latLng_to_string(destination_latLng, function(to_address) {
 				$('#to_address').html(to_address);
@@ -320,7 +327,7 @@
 				// Get route data
 				$.ajax({
 					type: 'PUT',
-					url:"/request",
+					url: SERVER + "/request",
 					data: JSON.stringify({origin: [position_latLng.lng(), position_latLng.lat()],
 					   	destination: [destination_latLng.lng(), destination_latLng.lat()],
 				   	  	persons: persons,

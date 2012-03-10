@@ -173,12 +173,12 @@ router.map(function () {
     */
 
     // Get all stands
-    this.get('/stands').bind(function (req, res) {
+    this.get('/rest/stands').bind(function (req, res) {
         taksi.get_stands(function (ret) {res.send(ret);})
     });
 	
 	// Get route information (for polling)
-    this.get(/^route\/([a-z0-9_]+)$/).bind(function (req, res, route_id) {
+    this.get(/^rest\/route\/([a-z0-9_]+)$/).bind(function (req, res, route_id) {
         taksi.get_stand_routes(function (ret) {res.send(ret);}, route_id);
     });
     
@@ -187,7 +187,7 @@ router.map(function () {
     */
 	
     // Add request
-    this.put('/request').bind(function (req, res, data) {
+    this.put('/rest/request').bind(function (req, res, data) {
         taksi.add_request(function (ret) {res.send(ret);}, req.json);
     });
 	
@@ -196,7 +196,7 @@ router.map(function () {
     */
 	
     // Remove request
-    this.del('/requests').bind(function (req, res, request_id) {
+    this.del('/rest/requests').bind(function (req, res, request_id) {
         taksi.remove_request(function (ret) {res.send(ret);}, request_id);
     });
 });
@@ -207,7 +207,21 @@ init_http = function () {
 		var uri = url.parse(request.url).pathname
 		var filename = path.join(process.cwd(), uri);
 		
-		if (request.url.match("/public/.*")) {	
+		if (request.url.match("/rest/.*")) {
+			// Serve dynamic content
+			var body = "";
+			request.addListener('data', function (chunk) { body += chunk });
+			request.addListener('end', function () {
+				// Da fuqq?
+				if (body) {
+					request.json = JSON.parse(body);
+				}
+				router.handle(request, body, function (result) {
+					response.writeHead(result.status, result.headers);
+					response.end(result.body);
+				});
+			});
+		} else {
 			path.exists(filename, function(exists) {
 				// Serve static content
 				if(exists) {
@@ -226,21 +240,7 @@ init_http = function () {
 					});
 				}
 			});
-		} else {
-			// Serve dynamic content
-			var body = "";
-			request.addListener('data', function (chunk) { body += chunk });
-			request.addListener('end', function () {
-				// Da fuqq?
-				if (body) {
-					request.json = JSON.parse(body);
-				}
-				router.handle(request, body, function (result) {
-					response.writeHead(result.status, result.headers);
-					response.end(result.body);
-				});
-			});
-		}
+        }
 	}).listen(settings.http.port, settings.http.host);
 }
 
