@@ -13,6 +13,7 @@ var util = require('util');
 // Options
 var settings = {
     name: 'kimppis',
+	places: 4,
     http: {
         host: 'localhost',
         port: 8080
@@ -34,28 +35,78 @@ taksi.get_stands = function(callback) {
     });
 }
 
-taksi.get_stand = function(stand_name) {
-    res = {
-        'name': util.format('Hello stand: %s', stand_name)
-    };
+taksi.add_request = function(callback, request) {
+	// request = {route: stand_id, destination: [long, lat], places: num}
+	
+    var Request = mongoose.model('Request');
+	
+	// Get routes from stand where point near destination
+	var query = Request.find({});
+	query.where('route.stand', request.stand_id);
+	query.where('route.completed', false);
+	query.$gte('route.places', request.places);
+	query.near('position', request.to);
+	query.populate('route.requests');
+	
+	query.findOne(function (err, closest_request) {
+		if (!closest_request) {
+			taksi.create_route(callback, request);
+			return;
+		}
+		
+		var route = closest_request.route;
+		
+		// TODO: Check if feasible at all!
+		
+		// Store request in database
+		var new_request = new Request(request);
+		new_request.route = route.id;
+		new_request.save();
+		
+		// Notify other requests
+		// TODO!
+		
+		// Return route and request id
+		route.places -= request.places;
+		route.save();
+		callback(route);
+	});
+};
 
-    return res;
+taksi.create_route = function(callback, incoming_request) {
+    var Request = mongoose.model('Request');
+    var Route = mongoose.model('Route');
+	
+	var route = new Route();
+	route.places = settings.places - request.places;
+	route.save();
+	
+	var request = new Request(incoming_request);
+	request.route = route.id
+	request.save();
+	
+	route.requests = [request];
+	
+	callback(route);
+};
+
+taksi.remove_request = function(request_id) {
+	var Request = mongoose.model('Request');
+	Request.findById(request_id).populate('route').run(function (err, request) {
+		var route = request.route;
+		route.places -= request.places;
+		route.save();
+		
+		Request.remove({id: request_id});
+	});
 }
 
-taksi.add_route = function(route) {
-    res = {
-        'name': util.format('Hello route: %s', route)
-    };
-    
-    return res;
-}
-
-taksi.default_response = function() {
-    res = {
-        'message': 'These are not the bits you are looking for!'
-    };
-
-    return res;
+taksi.get_request = function(callback, request_id) {
+    var Request = mongoose.model('Request');
+	
+	Request.findById(request_id).populate('route').populate('route.requests').run(function (err, request) {
+		callback(request);
+	});
 }
 
 // Deifne router
@@ -71,40 +122,50 @@ mrouter.map(function () {
     * Hanlde _GET
     */
 
-    // Just /tolpat
-    this.get('/stand').bind(function (req, res) {
+    // Get all stands
+    this.get(/^stands$/).bind(function (req, res) {
         taksi.get_stands(function (ret) {res.send(ret);})
     });
-
-
-    // tolpat/TOLPPA_NAME
-    this.get(/^stand\/([A-Za-z0-9_]+)$/).bind(function (req, res, id) {
-        taksi.get_stand(function (ret) {res.send(ret);}, id);
+	
+	// Get route information (for polling)
+    this.get(/^route\/([A-Za-z0-9_]+)$/).bind(function (req, res, route_id) {
+        taksi.get_stand_routes(function (ret) {res.send(ret);}, route_id);
     });
     
     /**
     * _POST
     */
-
-    // create database
-    this.post('/route/add').bind(function (req, res, route) {
-        taksi.add_route(function (ret) {res.send(ret);}, route);
+	
+    // Add request
+    this.post(/^requests\/([A-Za-z0-9_]+)$/).bind(function (req, res, request) {
+        taksi.add_request(function (ret) {res.send(ret);}, request);
+    });
+	
+    /**
+    * _DELETE
+    */
+	
+    // Remove request
+    this.del(/^requests$/).bind(function (req, res, request_id) {
+        taksi.remove_request(function (ret) {res.send(ret);}, request_id);
     });
 });
 
 // Create server based on router
-http.createServer(function (request, response) {
-    var body = "";
+init_http = function () {
+	http.createServer(function (request, response) {
+	    var body = "";
 
-    request.addListener('data', function (chunk) { body += chunk });
-    request.addListener('end', function () {
-        mrouter.handle(request, body, function (result) {
-            response.writeHead(result.status, result.headers);
-            response.end(result.body);
-        });
-    });
+	    request.addListener('data', function (chunk) { body += chunk });
+	    request.addListener('end', function () {
+	        mrouter.handle(request, body, function (result) {
+	            response.writeHead(result.status, result.headers);
+	            response.end(result.body);
+	        });
+	    });
 
-}).listen(settings.http.port, settings.http.host);
+	}).listen(settings.http.port, settings.http.host);
+}
 
 init_database = function() {
     mongoose.connect('mongodb://localhost/kimppis');
@@ -119,25 +180,26 @@ init_database = function() {
     });
 	Stand.index({
   		position: '2d'
-	})
+	});
     mongoose.model('Stand', Stand);
 	
     var Request = new Schema({
-        route    	: {type: ObjectId, index: true},
+        route    	: {type: ObjectId, index: true, ref: 'Route', required: true},
 		places		: {type: Number, default: 4},
-		date		: Date,
+		date		: {type: Date, default: new Date()},
 		destination	: [Number]
     });
 	Request.index({
   		destination: '2d'
-	})
+	});
     mongoose.model('Request', Request);
 	
     var Route = new Schema({
-        stand    	: ObjectId,
-		date		: Date,
+        stand    	: {type: ObjectId, index: true, ref: 'Stand'},
+		date		: {type: Date, default: new Date()},
 		places		: Number,
-		completed	: Boolean
+		completed	: {type: Boolean, default: false},
+		requests	: {type: [ObjectId], ref: 'Request'}
     });
     mongoose.model('Route', Route);
     
@@ -178,6 +240,8 @@ init_database = function() {
 init = function() {
     // Init DB
     init_database();
+	// Init Http
+	init_http();
 }
 
 // Init stuff
