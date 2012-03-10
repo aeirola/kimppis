@@ -29,8 +29,8 @@ taksi = {}
 // Application code
 taksi.get_stands = function(callback) {
     var Stand = mongoose.model('Stand');
-    Stand.find({}, function(err, docs) {
-        callback({thing: "thing", docs: docs});
+    Stand.find({}, function(err, stands) {
+        callback({stands: stands});
     });
 }
 
@@ -114,21 +114,65 @@ init_database = function() {
       , ObjectId = Schema.ObjectId;
 
     var Stand = new Schema({
-        name    : String,
-        coord   : String
+        name    	: {type: String, index: true, unique: true},
+        position	: [Number]
     });
-
+	Stand.index({
+  		position: '2d'
+	})
     mongoose.model('Stand', Stand);
+	
+    var Request = new Schema({
+        route    	: {type: ObjectId, index: true},
+		places		: {type: Number, default: 4},
+		date		: Date,
+		destination	: [Number]
+    });
+	Request.index({
+  		destination: '2d'
+	})
+    mongoose.model('Request', Request);
+	
+    var Route = new Schema({
+        stand    	: ObjectId,
+		date		: Date,
+		places		: Number,
+		completed	: Boolean
+    });
+    mongoose.model('Route', Route);
     
-    // Get some tolppa
+    // Get models
     var Stand = mongoose.model('Stand');
-    // Drop old
+    var Request = mongoose.model('Request');
+    var Route = mongoose.model('Route');
+    // Drop old data
     Stand.collection.drop(function() {});
+    Request.collection.drop(function() {});
+    Route.collection.drop(function() {});
     
-    // Add new
-    new Stand({name: "Stand 1"}).save();
-    new Stand({name: "Stand 2"}).save();
-    new Stand({name: "Stand 3"}).save();
+    // Add some stops
+    var otaniemi = new Stand({name: "Otaniemi", position: [24.8332,60.184753]});
+	otaniemi.save();
+    var rautatientori = new Stand({name: "Rautatientori", position: [24.942763,60.171595]});
+	rautatientori.save();
+    var eliel = new Stand({name: "Elieli", position: [24.939909,60.170806]});
+	eliel.save();
+	
+	// Add some routes
+	var ota_route = new Route({stand: otaniemi._id, date: new Date(), places: 4, completed: false});
+	ota_route.save();
+	var rauta_route1 = new Route({stand: rautatientori._id, date: new Date(), places: 4, completed: false});
+	rauta_route1.save();
+	var rauta_route2 = new Route({stand: rautatientori._id, date: new Date(), places: 4, completed: false});
+	rauta_route2.save();
+	var eli_route = new Route({stand: eliel._id, date: new Date(), places: 4, completed: false});
+	eli_route.save();
+	
+	// Add some requests
+    new Request({route: ota_route._id, places: 2, date: new Date(), destination: [60,24]}).save();
+    new Request({route: rauta_route1._id, places: 2, date: new Date(), destination: [60,24]}).save();
+    new Request({route: rauta_route2._id, places: 2, date: new Date(), destination: [60,24]}).save();
+    new Request({route: eli_route._id, places: 2, date: new Date(), destination: [60,24]}).save();
 }
 
 init = function() {
