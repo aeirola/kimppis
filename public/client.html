@@ -13,10 +13,16 @@
 		    vertical-align: top;	
 		  }
         </style>
-        <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js">
-        </script>
+		<script src="http://www.google.com/jsapi" type="text/javascript"></script>        
+        <script type="text/javascript">
+			google.load("maps", "3", {'other_params':'sensor=true'});
+			google.load("jquery", "1.7");
+		</script>
+		
         <script src="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.js">
         </script>
+		<script src="js/jquery.ui.map.full.min.js" type="text/javascript">
+		</script>
     </head>
     <body>
         <div data-role="page" id="page1">
@@ -29,10 +35,7 @@
                 </a>
             </div>
             <div data-role="content">
-                <h1>Map goes here</h1>
-                <a data-role="button" data-transition="slide" href="#page3">
-                    Selected
-                </a>
+				<div id="map_canvas" style="width:500px;height:500px"></div>
             </div>
         </div>
 
@@ -109,8 +112,8 @@
             </div>
             <div data-role="content">
                 <table>
-	               <tr><td><strong>From</strong></td><td>Central Railway Station</td></tr>
-	               <tr><td><strong>To</strong></td><td>Otaniemi</td></tr>
+	               <tr><td><strong>From</strong></td><td id="from_address">Searching...</td></tr>
+	               <tr><td><strong>To</strong></td><td id="to_address">Searching...</td></tr>
                     <tr><td></td><td></td></tr>
 	               <tr><td colspan="2"><h3>Found 2 Kimppis buddies to share a taxi with you!</h3></td></tr>
                     <tr><td></td><td></td></tr>
@@ -205,7 +208,131 @@
             </div>
         </div>
         <script>
-            //App custom javascript
+		// Constants
+		var SERVER = 'http://localhost:8080'
+		// Variables
+		var persons = 1;
+		var finder = true;
+		
+		var position_latLng = null;
+		var destination_latLng = null;
+		
+		// Page 1 (Map)
+		$('#page1').live("pageshow", function() {
+			$('#map_canvas').gmap( { 'center': getLatLng(), zoom: 12, 'callback': 
+				function (map) {
+					// Add location
+					if ( navigator.geolocation ) {
+						watch = navigator.geolocation.watchPosition ( 
+							function( position ) { 
+								// Get position
+								position_latLng = new google.maps.LatLng(position.coords.latitude, 
+																			 position.coords.longitude);
+								
+								// Set position
+								$('#map_canvas').gmap('clear', 'markers');
+								$('#map_canvas').gmap('addMarker', 
+									{ 'title'	: 'You are here!', 
+									  'bound'	: false, 
+									  'position': position_latLng,
+									  'icon'	: new google.maps.MarkerImage('img/blue-dot.png', null, null, new google.maps.Point(25, 25))
+								  	}
+								);
+								map.panTo( position_latLng );
+							}
+						);
+					}
+					
+					// Add event listener
+					google.maps.event.addListener(map, 'click', function (event) {
+						// Store positions, go to next page
+						destination_latLng = event.latLng;
+						$.mobile.changePage($('#page3'));
+					});
+				}
+			});
+			
+			function getLatLng() {
+				if ( google.loader.ClientLocation != null ) {
+					return new google.maps.LatLng(google.loader.ClientLocation.latitude, google.loader.ClientLocation.longitude);	
+				}
+				return new google.maps.LatLng(65.171916, 20.941196);
+			}
+
+		});
+				
+		$('#page1').live("pagehide", function() {
+			if ( navigator.geolocation ) {
+				navigator.geolocation.clearWatch(watch);
+            }
+		});
+				
+		$('#page1').live("pagecreate", function() {
+			var watch;
+		});
+		
+		// Page 2 (Settings)
+		$('#radio1').change(function(event) {persons = 1});
+		$('#radio2').change(function(event) {persons = 2});
+		$('#radio3').change(function(event) {persons = 3});
+		$('#radio4').change(function(event) {persons = 4});
+		
+		$('#toggleswitch1').change(function(event) {finder = !finder});
+		
+		// Page 3 (Route data)
+		$('#page3').live("pageshow", function() {
+			// Devel defaults
+			position_latLng = position_latLng || new google.maps.LatLng(60, 24)
+			destination_latLng = destination_latLng || new google.maps.LatLng(60, 24)
+			
+			// Update form / to
+			latLng_to_string(position_latLng, function(address) {
+				$('#from_address').html(address);
+			});
+			latLng_to_string(destination_latLng, function(address) {
+				$('#to_address').html(address);
+			});
+			
+			// Get route data
+			$.post({
+				url: SERVER + '/request',
+				data: {position: [position_latLng.longitude, position_latLng.latitude],
+				   	destination: [destination_latLng.longitude, destination_latLng.latitude],
+			   	  	places: persons}, 
+				success: function() {
+					console.log("done!");
+				},
+				fail: function(jqXHR, textStatus) {
+					console.log(textStatus);
+				}
+			});
+		});
+		
+		latLng_to_string = function(latlng, callback) {
+			if (!latlng) {
+				callback("Unkown");
+				return;
+			}
+			
+			var geocoder = new google.maps.Geocoder();
+			geocoder.geocode({'latLng': latlng}, function(results, status) {
+				if (status == google.maps.GeocoderStatus.OK) {
+					if (results[0]) {
+						var string = results[0].formatted_address;
+						callback(string);
+					}
+				} else {
+					console.log("Geocoder failed due to: " + status);
+				}
+			});
+		}
+		
+		
+		handle_route = function(route) {
+			console.log(route);
+		}
+		
+		
         </script>
     </body>
 </html>

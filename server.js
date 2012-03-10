@@ -4,6 +4,9 @@ var url = require('url');
 var querystring = require('querystring');
 var journey = require('journey');
 
+var path = require("path");
+var fs = require("fs");
+
 // DB
 var mongoose = require('mongoose');
 
@@ -29,6 +32,7 @@ taksi = {}
 
 // Application code
 taksi.get_stands = function(callback) {
+	console.log("get_stands()");
     var Stand = mongoose.model('Stand');
     Stand.find({}, function(err, stands) {
         callback({stands: stands});
@@ -36,7 +40,8 @@ taksi.get_stands = function(callback) {
 }
 
 taksi.add_request = function(callback, request) {
-	// request = {route: stand_id, destination: [long, lat], places: num}
+	// request = {position: [long, lat], destination: [long, lat], places: num}
+	console.log("add_request("+ request +")");
 	
     var Request = mongoose.model('Request');
 	
@@ -91,6 +96,8 @@ taksi.create_route = function(callback, incoming_request) {
 };
 
 taksi.remove_request = function(request_id) {
+	console.log("remove_request("+ request_id +")");
+	
 	var Request = mongoose.model('Request');
 	Request.findById(request_id).populate('route').run(function (err, request) {
 		var route = request.route;
@@ -102,6 +109,8 @@ taksi.remove_request = function(request_id) {
 }
 
 taksi.get_request = function(callback, request_id) {
+	console.log("get_request("+ request_id +")");
+	
     var Request = mongoose.model('Request');
 	
 	Request.findById(request_id).populate('route').populate('route.requests').run(function (err, request) {
@@ -111,8 +120,8 @@ taksi.get_request = function(callback, request_id) {
 
 // Deifne router
 // Examples https://github.com/bogomil/Node.JS-examples/blob/master/httpsrestserver/routerit.js
-var mrouter = new (journey.Router)();
-mrouter.map(function () {
+var router = new (journey.Router)();
+router.map(function () {
     /**
     * Say Welcome to the user or dispay eany other info
     */
@@ -137,7 +146,7 @@ mrouter.map(function () {
     */
 	
     // Add request
-    this.post(/^requests\/([A-Za-z0-9_]+)$/).bind(function (req, res, request) {
+    this.post(/^request$/).bind(function (req, res, request) {
         taksi.add_request(function (ret) {res.send(ret);}, request);
     });
 	
@@ -154,16 +163,39 @@ mrouter.map(function () {
 // Create server based on router
 init_http = function () {
 	http.createServer(function (request, response) {
-	    var body = "";
+		var uri = url.parse(request.url).pathname
+		var filename = path.join(process.cwd(), uri);
+		
+		path.exists(filename, function(exists) {
+			// Serve static content
+			if(exists) {
+				if (fs.statSync(filename).isDirectory()) filename += '/index.html';
+				fs.readFile(filename, "binary", function(err, file) {
+					if(err) {        
+						response.writeHead(500, {"Content-Type": "text/plain"});
+						response.write(err + "\n");
+						response.end();
+						return;
+					}
 
-	    request.addListener('data', function (chunk) { body += chunk });
-	    request.addListener('end', function () {
-	        mrouter.handle(request, body, function (result) {
-	            response.writeHead(result.status, result.headers);
-	            response.end(result.body);
-	        });
-	    });
-
+					response.writeHead(200);
+					response.write(file, "binary");
+					response.end();
+				});
+			} else {
+				// Serve static content
+				console.log("routing")
+			    var body = "";
+					console.log("request");
+					console.log(request);
+					router.handle(request, body, function (result) {
+						console.log("result");
+						console.log(result);
+			            response.writeHead(result.status, result.headers);
+			            response.end(result.body);
+			        });
+			}
+		});
 	}).listen(settings.http.port, settings.http.host);
 }
 
