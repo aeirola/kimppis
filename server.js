@@ -18,7 +18,7 @@ var settings = {
     name: 'kimppis',
 	places: 4,
     http: {
-        host: 'localhost',
+        host: '0.0.0.0',
         port: 8080
     },
     db: {
@@ -30,6 +30,9 @@ var settings = {
 
 taksi = {}
 
+// WTF??
+var json = null;
+
 // Application code
 taksi.get_stands = function(callback) {
 	console.log("get_stands()");
@@ -39,84 +42,125 @@ taksi.get_stands = function(callback) {
     });
 }
 
-taksi.add_request = function(callback, request) {
-	// request = {position: [long, lat], destination: [long, lat], places: num}
-	console.log("add_request("+ request +")");
-	
+taksi.add_request = function(callback, incoming_request) {
+	// request = {origin: [long, lat], destination: [long, lat], persons: num, address: str}
     var Request = mongoose.model('Request');
+    var Route = mongoose.model('Route');
+	var Stand = mongoose.model('Stand');
 	
-	// Get routes from stand where point near destination
-	var query = Request.find({});
-	query.where('route.stand', request.stand_id);
-	query.where('route.completed', false);
-	query.$gte('route.places', request.places);
-	query.near('position', request.to);
-	query.populate('route.requests');
-	
-	query.findOne(function (err, closest_request) {
-		if (!closest_request) {
-			taksi.create_route(callback, request);
+	var query = Stand.find({});
+	query.near('position', incoming_request.origin);
+	query.findOne(function (err, closest_stand) {
+		if (!closest_stand) {
+			console.log("No stand found!");
 			return;
 		}
 		
-		var route = closest_request.route;
+		// Get routes from stand where point near destination
+		var query = Request.find({});
+		query.where('stand', closest_stand.id);
+		query.where('completed', false);
+		query.gte('places', incoming_request.persons);
+		query.near('destination', incoming_request.destination);
 		
-		// TODO: Check if feasible at all!
-		
-		// Store request in database
-		var new_request = new Request(request);
-		new_request.route = route.id;
-		new_request.save();
-		
-		// Notify other requests
-		// TODO!
-		
-		// Return route and request id
-		route.places -= request.places;
-		route.save();
-		callback(route);
+		query.findOne(function (err, closest_request) {
+			if (err) {
+				console.log(err, err.message);
+				return;
+			}
+			
+			var route;
+			
+			// TODO: Check if feasible at all!
+			if (!closest_request) {
+				// Create route
+				route = new Route();
+				route.stand = closest_stand.id;
+				route.save(function () {
+					taksi.add_request_to_route(incoming_request, route, callback);
+				});
+			} else {
+				taksi.get_route(closest_request.route, function(route) {
+					taksi.add_request_to_route(incoming_request, route, callback);
+				});
+			}
+		});
 	});
 };
 
-taksi.create_route = function(callback, incoming_request) {
+taksi.add_request_to_route = function(incoming_request, route, callback) {
     var Request = mongoose.model('Request');
     var Route = mongoose.model('Route');
-	
-	var route = new Route();
-	route.places = settings.places - request.places;
-	route.save();
-	
+
+	// Create request
 	var request = new Request(incoming_request);
-	request.route = route.id
-	request.save();
-	
-	route.requests = [request];
-	
-	callback(route);
-};
+	request.route = route.id;
+	request.stand = route.stand;
+	request.save(function () {
+		// Return route and request id
+		route.places -= request.persons;
+		route.requests = route.requests || []
+		route.requests.push(request.id);
+		route.save(function () {
+			// Return the created request
+			taksi.get_route_data(request.id, route.id, callback);
+		});
+	});
+}
 
 taksi.remove_request = function(request_id) {
 	console.log("remove_request("+ request_id +")");
 	
 	var Request = mongoose.model('Request');
-	Request.findById(request_id).populate('route').run(function (err, request) {
+	Request.findById(request_id).run(function (err, request) {
 		var route = request.route;
 		route.places -= request.places;
-		route.save();
-		
-		Request.remove({id: request_id});
+		route.requests.
+		route.save(function() {
+			Request.remove({id: request_id});
+		});
 	});
 }
 
-taksi.get_request = function(callback, request_id) {
+taksi.get_route_data = function(request_id, route_id, callback) {
+	var Request = mongoose.model('Request');
+	taksi.get_request(request_id, function (request) {
+		taksi.get_route(route_id, function (route) {
+			Request.find({route: route_id}, function (err, requests) {
+				callback({request: request, route: route, requests: requests});
+			});
+		});
+	});
+};
+
+taksi.get_request = function(request_id, callback) {
 	console.log("get_request("+ request_id +")");
 	
     var Request = mongoose.model('Request');
-	
-	Request.findById(request_id).populate('route').populate('route.requests').run(function (err, request) {
+	var query = Request.findById(request_id);
+	//query.populate('route');
+	query.populate('stand');
+	query.run(function (err, request) {
 		callback(request);
 	});
-}
+};
+
+taksi.get_route = function(route_id, callback) {
+    var Route = mongoose.model('Route');
+	var query = Route.findById(route_id);
+	//query.populate('requests');
+	query.populate('stand')
+	query.run(function(err, route){
+		callback(route);
+	});
+};
+
+taksi.get_stand = function(stand_id, callback) {
+    var Stand = mongoose.model('Stand');
+	Stand.findById(stand_id, function(err, stand) {
+		callback(stand);
+	});
+};
 
 // Deifne router
 // Examples https://github.com/bogomil/Node.JS-examples/blob/master/httpsrestserver/routerit.js
@@ -132,22 +176,22 @@ router.map(function () {
     */
 
     // Get all stands
-    this.get(/^stands$/).bind(function (req, res) {
+    this.get('/stands').bind(function (req, res) {
         taksi.get_stands(function (ret) {res.send(ret);})
     });
 	
 	// Get route information (for polling)
-    this.get(/^route\/([A-Za-z0-9_]+)$/).bind(function (req, res, route_id) {
+    this.get(/^route\/([a-z0-9_]+)$/).bind(function (req, res, route_id) {
         taksi.get_stand_routes(function (ret) {res.send(ret);}, route_id);
     });
     
     /**
-    * _POST
+    * _PUT
     */
 	
     // Add request
-    this.post(/^request$/).bind(function (req, res, request) {
-        taksi.add_request(function (ret) {res.send(ret);}, request);
+    this.put('/request').bind(function (req, res, data) {
+        taksi.add_request(function (ret) {res.send(ret);}, req.json);
     });
 	
     /**
@@ -155,7 +199,7 @@ router.map(function () {
     */
 	
     // Remove request
-    this.del(/^requests$/).bind(function (req, res, request_id) {
+    this.del('/requests').bind(function (req, res, request_id) {
         taksi.remove_request(function (ret) {res.send(ret);}, request_id);
     });
 });
@@ -166,36 +210,40 @@ init_http = function () {
 		var uri = url.parse(request.url).pathname
 		var filename = path.join(process.cwd(), uri);
 		
-		path.exists(filename, function(exists) {
-			// Serve static content
-			if(exists) {
-				if (fs.statSync(filename).isDirectory()) filename += '/index.html';
-				fs.readFile(filename, "binary", function(err, file) {
-					if(err) {        
-						response.writeHead(500, {"Content-Type": "text/plain"});
-						response.write(err + "\n");
-						response.end();
-						return;
-					}
-
-					response.writeHead(200);
-					response.write(file, "binary");
-					response.end();
-				});
-			} else {
+		if (request.url.match("/public/.*")) {	
+			path.exists(filename, function(exists) {
 				// Serve static content
-				console.log("routing")
-			    var body = "";
-					console.log("request");
-					console.log(request);
-					router.handle(request, body, function (result) {
-						console.log("result");
-						console.log(result);
-			            response.writeHead(result.status, result.headers);
-			            response.end(result.body);
-			        });
-			}
-		});
+				if(exists) {
+					if (fs.statSync(filename).isDirectory()) filename += '/index.html';
+					fs.readFile(filename, "binary", function(err, file) {
+						if(err) {
+							response.writeHead(500, {"Content-Type": "text/plain"});
+							response.write(err + "\n");
+							response.end();
+							return;
+						}
+						
+						response.writeHead(200);
+						response.write(file, "binary");
+						response.end();
+					});
+				}
+			});
+		} else {
+			// Serve dynamic content
+			var body = "";
+			request.addListener('data', function (chunk) { body += chunk });
+			request.addListener('end', function () {
+				// Da fuqq?
+				if (body) {
+					request.json = JSON.parse(body);
+				}
+				router.handle(request, body, function (result) {
+					response.writeHead(result.status, result.headers);
+					response.end(result.body);
+				});
+			});
+		}
 	}).listen(settings.http.port, settings.http.host);
 }
 
@@ -216,10 +264,14 @@ init_database = function() {
     mongoose.model('Stand', Stand);
 	
     var Request = new Schema({
+        stand    	: {type: ObjectId, index: true, ref: 'Stand', required: true},
         route    	: {type: ObjectId, index: true, ref: 'Route', required: true},
+		persons		: {type: Number, default: 4},
+		date		: {type: Date, default: Date.now},
+		completed	: {type: Boolean, default: false},
 		places		: {type: Number, default: 4},
-		date		: {type: Date, default: new Date()},
-		destination	: [Number]
+		destination	: [{type: Number}],
+		destination_string : {type: String, default: "Unkown"}
     });
 	Request.index({
   		destination: '2d'
@@ -228,10 +280,10 @@ init_database = function() {
 	
     var Route = new Schema({
         stand    	: {type: ObjectId, index: true, ref: 'Stand'},
-		date		: {type: Date, default: new Date()},
+		date		: {type: Date, default: Date.now},
 		places		: Number,
-		completed	: {type: Boolean, default: false},
-		requests	: {type: [ObjectId], ref: 'Request'}
+		requests	: [],
+		completed	: {type: Boolean, default: false}
     });
     mongoose.model('Route', Route);
     
@@ -253,20 +305,20 @@ init_database = function() {
 	eliel.save();
 	
 	// Add some routes
-	var ota_route = new Route({stand: otaniemi._id, date: new Date(), places: 4, completed: false});
+	var ota_route = new Route({stand: otaniemi.id, places: 4, completed: false});
 	ota_route.save();
-	var rauta_route1 = new Route({stand: rautatientori._id, date: new Date(), places: 4, completed: false});
+	var rauta_route1 = new Route({stand: rautatientori.id, places: 4, completed: false});
 	rauta_route1.save();
-	var rauta_route2 = new Route({stand: rautatientori._id, date: new Date(), places: 4, completed: false});
+	var rauta_route2 = new Route({stand: rautatientori.id, places: 4, completed: false});
 	rauta_route2.save();
-	var eli_route = new Route({stand: eliel._id, date: new Date(), places: 4, completed: false});
+	var eli_route = new Route({stand: eliel.id, places: 4, completed: false});
 	eli_route.save();
 	
 	// Add some requests
-    new Request({route: ota_route._id, places: 2, date: new Date(), destination: [60,24]}).save();
-    new Request({route: rauta_route1._id, places: 2, date: new Date(), destination: [60,24]}).save();
-    new Request({route: rauta_route2._id, places: 2, date: new Date(), destination: [60,24]}).save();
-    new Request({route: eli_route._id, places: 2, date: new Date(), destination: [60,24]}).save();
+    new Request({route: ota_route.id, stand: otaniemi.id, persons: 1, destination: [60,24]}).save();
+    new Request({route: rauta_route1.id, stand: rauta_route1.id, persons: 1, destination: [60,24]}).save();
+    new Request({route: rauta_route2.id, stand: rauta_route2.id, persons: 2, destination: [60,24]}).save();
+    new Request({route: eli_route.id, stand: eli_route.id, persons: 1, destination: [60,24]}).save();
 }
 
 init = function() {

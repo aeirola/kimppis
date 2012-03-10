@@ -7,7 +7,7 @@
         </title>
         <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.css" />
         <style>
-            /* App custom styles */
+          /* App custom styles */
 		  td {
 		    padding: 0px 10px 5px 0px;
 		    vertical-align: top;	
@@ -115,17 +115,23 @@
 	               <tr><td><strong>From</strong></td><td id="from_address">Searching...</td></tr>
 	               <tr><td><strong>To</strong></td><td id="to_address">Searching...</td></tr>
                     <tr><td></td><td></td></tr>
-	               <tr><td colspan="2"><h3>Found 2 Kimppis buddies to share a taxi with you!</h3></td></tr>
-                    <tr><td></td><td></td></tr>
-	               <tr><td><strong>Price</strong></td><td>
+					
+	               <tr class="yksis"><td colspan="2"><h3>Waiting for Kimppis buddies to share a taxi with you!</h3></td></tr>
+				   
+	               <tr class="kimppis" style="display:none">
+					   <td colspan="2"><h3>Found <span id="kimppises">?</span> Kimppis buddies to share a taxi with you!</h3></td>
+				   </tr>
+				   
+                   <tr class="kimppis" style="display:none"><td></td><td></td></tr>
+	               <tr class="kimppis" style="display:none"><td><strong>Price</strong></td><td>
 		              <table>
-			             <tr><td>Normal:</td><td>23,30 €</td></tr>
-			             <tr><td><strong>Kimppis:</strong></td><td><strong>9,20 €</strong></td>
-				        <tr><td>You save:</td><td>14,10 €!</td>
+			             <tr><td>Normal:</td><td id="normal_price">?? €</td></tr>
+			             <tr><td><strong>Kimppis:</strong></td><td><strong id="kimppis_price">?? €</strong></td>
+				        <tr><td>You save:</td><td id="saved_price">?? €!</td>
 		              </table>
 		          </td></tr>
 	           </table>
-                <a data-role="button" data-transition="slide" href="#page4">
+                <a class="kimppisa" data-role="button" data-transition="slide" href="#page4">
                     Accept
                 </a>
             </div>
@@ -209,13 +215,15 @@
         </div>
         <script>
 		// Constants
-		var SERVER = 'http://localhost:8080'
+		var SERVER = 'http://marvin.dy.fi:8080'
 		// Variables
 		var persons = 1;
 		var finder = true;
 		
 		var position_latLng = null;
 		var destination_latLng = null;
+		
+		var notification_hash = "";
 		
 		// Page 1 (Map)
 		$('#page1').live("pageshow", function() {
@@ -283,28 +291,29 @@
 		$('#page3').live("pageshow", function() {
 			// Devel defaults
 			position_latLng = position_latLng || new google.maps.LatLng(60, 24)
-			destination_latLng = destination_latLng || new google.maps.LatLng(60, 24)
+			destination_latLng = destination_latLng || new google.maps.LatLng(62, 25)
 			
 			// Update form / to
-			latLng_to_string(position_latLng, function(address) {
-				$('#from_address').html(address);
-			});
-			latLng_to_string(destination_latLng, function(address) {
-				$('#to_address').html(address);
-			});
-			
-			// Get route data
-			$.post({
-				url: SERVER + '/request',
-				data: {position: [position_latLng.longitude, position_latLng.latitude],
-				   	destination: [destination_latLng.longitude, destination_latLng.latitude],
-			   	  	places: persons}, 
-				success: function() {
-					console.log("done!");
-				},
-				fail: function(jqXHR, textStatus) {
-					console.log(textStatus);
-				}
+			latLng_to_string(destination_latLng, function(to_address) {
+				$('#to_address').html(to_address);
+				
+				// Get route data
+				$.ajax({
+					type: 'PUT',
+					url:"/request",
+					data: JSON.stringify({origin: [position_latLng.lng(), position_latLng.lat()],
+					   	destination: [destination_latLng.lng(), destination_latLng.lat()],
+				   	  	persons: persons,
+						destination_string: to_address
+					
+					}), 
+					contentTypeString: 'application/json',
+					dataType: 'json',
+					success: handle_route,
+					fail: function(jqXHR, textStatus) {
+						console.log(textStatus);
+					}
+				});
 			});
 		});
 		
@@ -328,11 +337,25 @@
 		}
 		
 		
-		handle_route = function(route) {
-			console.log(route);
+		handle_route = function(route_data) {
+			// Get data
+			route = route_data.route;
+			request = route_data.request;
+			requests = route_data.requests;
+			stand = route.stand;
+			
+			// Populate view
+			$('#from_address').html(stand.name);
+			
+			if (requests.length >= 2) {
+				$('#page3 .yksis').hide();
+				$('#page3 .kimppis').show();
+				$('#page3 #kimppises').html(requests.length);
+			} else {
+				$('#page3 .yksis').show();
+				$('#page3 .kimppis').hide();
+			}
 		}
-		
-		
         </script>
     </body>
 </html>
