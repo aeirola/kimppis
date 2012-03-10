@@ -8,6 +8,11 @@
         <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.css" />
         <style>
           /* App custom styles */
+		  
+		  body, div.content {
+			  height: 100%;
+		  }
+		  
 		  td {
 		    padding: 0px 10px 5px 0px;
 		    vertical-align: top;	
@@ -25,7 +30,7 @@
 		</script>
     </head>
     <body>
-        <div data-role="page" id="page1">
+        <div class="content" data-role="page" id="page1">
             <div data-theme="a" data-role="header">
                 <h3>
                     Destination
@@ -34,8 +39,8 @@
                     Settings
                 </a>
             </div>
-            <div data-role="content">
-				<div id="map_canvas" style="width:500px;height:500px"></div>
+            <div class="content" data-role="content">
+				<div id="map_canvas" style="width:100%;height:90%"></div>
             </div>
         </div>
 
@@ -106,7 +111,7 @@
                 <a data-role="button" data-direction="reverse" data-transition="slide" href="#page1">
                     Back
                 </a>
-                <a data-role="button" data-transition="flip" href="#page2" class="ui-btn-right">
+                <a data-role="button" data-transition="flip" href="#page7" class="ui-btn-right">
                     Map
                 </a>
             </div>
@@ -125,13 +130,13 @@
                    <tr class="kimppis" style="display:none"><td></td><td></td></tr>
 	               <tr class="kimppis" style="display:none"><td><strong>Price</strong></td><td>
 		              <table>
-			             <tr><td>Normal:</td><td id="normal_price">?? €</td></tr>
-			             <tr><td><strong>Kimppis:</strong></td><td><strong id="kimppis_price">?? €</strong></td>
-				        <tr><td>You save:</td><td id="saved_price">?? €!</td>
+			             <tr><td>Normal:</td><td><span id="normal_price">??</span> €</td></tr>
+			             <tr><td><strong>Kimppis:</strong></td><td><strong><span id="kimppis_price">??</span> €</strong></td>
+				        <tr><td>You save:</td><td><span id="saved_price">??</span> €!</td>
 		              </table>
 		          </td></tr>
 	           </table>
-                <a class="kimppisa" data-role="button" data-transition="slide" href="#page4">
+                <a class="kimppis" style="display:none" data-role="button" data-transition="slide" href="#page4">
                     Accept
                 </a>
             </div>
@@ -183,19 +188,11 @@
             </div>
             <div data-role="content">
                 <h3>Destinations</h3>
-                <table style="width: 100%;">
-	               <tr><td><strong>You</strong> (10,3 km)</td><td style="float:right;"><strong>9,20 €</strong></td></tr>
-	               <tr><td colspan="2">Betonimiehenkuja 3, Espoo</td></tr>
-	               <tr><td colspan="2"><hr /></td></tr>
-	               <tr><td><strong>Buddy 1</strong> (12,2 km)</td><td style="float:right;"><strong>11,00 €</strong></td></tr>
-	               <tr><td colspan="2">Tapionaukio 3, Espoo</td></tr>
-	               <tr><td colspan="2"><hr /></td></tr>
-	               <tr><td><strong>Buddy 2</strong> (16,3 km)</td><td style="float:right;"><strong>14,70 €</strong></td></tr>
-	               <tr><td colspan="2">Sakkolantie 1, Espoo</td></tr>
-	               <tr><td colspan="2"><hr /></td></tr>
-	               <tr><td><strong>TOTAL</strong> (16,3 km)</td><td style="float:right;"><strong>34,90 €</strong></td></tr>
-	               <tr><td></td><td></td></tr>
-	           </table>
+                <table id="route_summary_table" style="width: 100%;">
+	           	</table>
+			   	<p>
+				   <a href="https://docs.google.com/spreadsheet/viewform?formkey=dHZ3NXZ5LTVOMDNTd01JdjVneHNnQWc6MQ">Give feedback!</a>
+				</p>
             </div>
         </div>
 
@@ -210,12 +207,18 @@
                 </a>
             </div>
             <div data-role="content">
-                <h1>Route map</h1>
+	            <div data-role="content">
+					<div id="route_map_canvas" style="width:500px;height:500px"></div>
+	            </div>
             </div>
         </div>
-        <script>
+        
+		
+		
+		<script>
 		// Constants
 		var SERVER = 'http://marvin.dy.fi:8080'
+		
 		// Variables
 		var persons = 1;
 		var finder = true;
@@ -223,11 +226,33 @@
 		var position_latLng = null;
 		var destination_latLng = null;
 		
+		var directionsService;
+		var directionsRenderer;
+		
+		var own_index = null;
+		var route = {};
+		var route_points = [];
+		var total_data = {}
+		var directions_result = null;
 		var notification_hash = "";
 		
-		// Page 1 (Map)
-		$('#page1').live("pageshow", function() {
-			$('#map_canvas').gmap( { 'center': getLatLng(), zoom: 12, 'callback': 
+		var costs = [];
+		var cost_index = 0;
+		
+		/*
+		 * 
+		 * Page 1 (Map)
+		 */
+		 $('#page1').live("pageshow", function() {
+			$('#map_canvas').gmap( { center: getLatLng(), 
+									 zoom: 11, 
+				  					 mapTypeControl: false,
+				  					 keyboardShortcuts: false,
+				  					 panControl: false,
+				  					 rotateControl: false,
+				  					 scaleControl: false,
+									 streetViewControl: false,
+									 callback: 
 				function (map) {
 					// Add location
 					if ( navigator.geolocation ) {
@@ -259,14 +284,6 @@
 					});
 				}
 			});
-			
-			function getLatLng() {
-				if ( google.loader.ClientLocation != null ) {
-					return new google.maps.LatLng(google.loader.ClientLocation.latitude, google.loader.ClientLocation.longitude);	
-				}
-				return new google.maps.LatLng(65.171916, 20.941196);
-			}
-
 		});
 				
 		$('#page1').live("pagehide", function() {
@@ -279,7 +296,11 @@
 			var watch;
 		});
 		
-		// Page 2 (Settings)
+		
+		/*
+		 * 
+		 * Page 2 (Settings)
+		 */
 		$('#radio1').change(function(event) {persons = 1});
 		$('#radio2').change(function(event) {persons = 2});
 		$('#radio3').change(function(event) {persons = 3});
@@ -287,12 +308,11 @@
 		
 		$('#toggleswitch1').change(function(event) {finder = !finder});
 		
-		// Page 3 (Route data)
-		$('#page3').live("pageshow", function() {
-			// Devel defaults
-			position_latLng = position_latLng || new google.maps.LatLng(60, 24)
-			destination_latLng = destination_latLng || new google.maps.LatLng(62, 25)
-			
+		/*
+		 * 
+		 * Page 3 (Route data)
+		 */
+        $('#page3').live("pageshow", function() {
 			// Update form / to
 			latLng_to_string(destination_latLng, function(to_address) {
 				$('#to_address').html(to_address);
@@ -305,7 +325,6 @@
 					   	destination: [destination_latLng.lng(), destination_latLng.lat()],
 				   	  	persons: persons,
 						destination_string: to_address
-					
 					}), 
 					contentTypeString: 'application/json',
 					dataType: 'json',
@@ -316,6 +335,11 @@
 				});
 			});
 		});
+		
+		$('#page3').live("pagecreate", function() {
+			directionsService = new google.maps.DirectionsService();
+		});
+		
 		
 		latLng_to_string = function(latlng, callback) {
 			if (!latlng) {
@@ -336,13 +360,20 @@
 			});
 		}
 		
-		
 		handle_route = function(route_data) {
 			// Get data
 			route = route_data.route;
-			request = route_data.request;
-			requests = route_data.requests;
-			stand = route.stand;
+			var request = route_data.request;
+			var requests = route_data.requests;
+			var stand = route.stand;
+			
+			// Get own id
+			for (var i = 0 ; i < requests.length ; i++) {
+				if (request.id == requests[i].id) {
+					own_index = i;
+					break;
+				}
+			}
 			
 			// Populate view
 			$('#from_address').html(stand.name);
@@ -355,7 +386,343 @@
 				$('#page3 .yksis').show();
 				$('#page3 .kimppis').hide();
 			}
+			
+			// Calculate prices
+			var waypoints = [];
+			for (var i = 0; i < requests.length-1; i++) {
+				waypoints.push({location: new google.maps.LatLng(requests[i].destination[1], requests[i].destination[0]),
+								stopover:true
+								});
+			}
+			var request = {
+		    	origin: position_latLng,
+		      	destination: new google.maps.LatLng(requests[requests.length-1].destination[1], requests[requests.length-1].destination[0]),
+				waypoints: waypoints,
+				optimizeWaypoints: true,
+				provideRouteAlternatives: false,
+				unitSystem: google.maps.UnitSystem.METRIC,
+		      	travelMode: google.maps.TravelMode.DRIVING
+		    };
+			
+			var distances = [];
+			directionsService.route(request, function(result, status) {
+			    if (status == google.maps.DirectionsStatus.OK) {
+					directions_result = result;
+					var legs = result.routes[0].legs;
+					var order = result.routes[0].waypoint_order;
+					for (var i = 0; i < legs.length; i++) {
+						if (i != 0 && i != legs.length-1) {
+							distances[order[i]+1] = legs[i].distance.value;
+						} else {
+							distances[i] = legs[i].distance.value;
+						}
+					}
+					
+					delete request.waypoints;
+					directionsService.route(request, function(result, status) {
+						costs = calculate_costs(distances);
+						
+						route_points = [];
+						var total_distance = 0;
+						var total_cost = 0;
+						for (var i = 0 ; i < costs.length ; i++) {
+							route_points[i] = {
+								request: requests[i],
+								distance: distances[i],
+								cost: costs[i]
+							};
+							total_distance += distances[i];
+							total_cost += costs[i];
+						}
+						total_data.distance = total_distance;
+						total_data.cost = total_cost;
+						
+						kimppis_cost = costs[own_index];
+						normal_cost = calculate_costs([result.routes[0].legs[0].distance.value])[0];
+						difference = normal_cost - kimppis_cost;
+						
+						// Update values
+						$('#kimppis_price').html(Math.round(kimppis_cost*100)/100);
+						$('#normal_price').html(Math.round(normal_cost*100)/100);
+						$('#saved_price').html(Math.round(difference*100)/100);
+					});
+			    } else {
+			    	console.log(status);
+				}
+			});
 		}
-        </script>
+		
+		calculate_costs = function(distances) {
+			var persons = distances.length;
+			// Starting price
+			var starting_price = start_price(Date.now());
+			
+			var price_per_km = persons <= 2 ? 1.43 : 1.72;
+			var total_km_price = 0;
+			var total_distance = 0;
+			for (var i = 0; i < persons; i++) {
+				total_distance += distances[i];
+				total_km_price += distances[i] * price_per_km/1000.0;
+			}
+			
+			// +10%
+			km_price *= 1.10;
+			
+			var prices = [];
+			for (var i = 0; i < persons; i++) {
+				var km_price = total_km_price * distances[i] / total_distance;
+				km_price = km_price || 0;
+				prices[i] = km_price + (starting_price / persons);
+			}
+			
+			return prices;
+		}
+		
+		start_price = function(date) {
+			// TODO: Compare with current date
+			return 5.5;
+		}
+		
+		/*
+		 * 
+		 * Page 6 (Summary)
+		 */
+		$('#page6').live("pageshow", function() {
+			var persons = route_points.length;
+			var table = $('#route_summary_table');
+			
+			var buddy;
+			var buddy_counter = 1;
+			for (var i = 0 ; i < persons ; i++ ) {
+				if (i == own_index) {
+					buddy = "You";
+				} else {
+					buddy = "Buddy " + buddy_counter;
+					buddy_counter += 1;
+				}
+				var route_point = route_points[i];
+				var km = route_point.distance/1000;
+				var cost = Math.round(route_point.cost*100)/100;
+				var address = route_point.request.destination_string;
+				
+				table.append('<tr><td><strong>' + buddy + '</strong> (' + km + ' km)</td><td style="float:right;"><strong>' + 
+														cost + ' €</strong></td></tr>');
+				table.append('<tr><td colspan="2">' + address + '</td></tr>');
+				table.append('<tr><td colspan="2"><hr /></td></tr>');
+			}
+			
+			var total_km = total_data.distance / 1000;
+			var total_cost = Math.round(total_data.cost*100)/100;
+			table.append('<tr><td><strong>TOTAL</strong> ('+ total_km +' km)</td>'+
+						 '<td style="float:right;"><strong>' + total_cost + ' €</strong></td></tr>');
+			table.append('<tr><td></td><td></td></tr>');
+		});
+		 
+ 		/*
+ 		 * 
+ 		 * Page 7 (Route map)
+ 		 */
+ 		$('#page7').live("pageshow", function() {
+			$('#route_map_canvas').gmap( { 'center': getLatLng(), 'callback': 
+				function (map) {
+					// Show directions
+					console.log(directions_result);
+					if (directions_result) {
+						directionsRenderer.setMap(map);
+				        directionsRenderer.setDirections(directions_result);
+					}
+				}
+			});
+ 		});
+		
+		$('#page7').live("pagecreate", function() {
+			directionsRenderer = new google.maps.DirectionsRenderer();
+			directionsRenderer.setOptions({
+				draggable: false,
+				hideRouteList: false,
+			});
+		});
+		
+		
+ 		/*
+ 		 * 
+ 		 * Helpers
+ 		 */
+		
+		function getLatLng() {
+			if ( google.loader.ClientLocation != null ) {
+				return new google.maps.LatLng(google.loader.ClientLocation.latitude, google.loader.ClientLocation.longitude);	
+			}
+			return new google.maps.LatLng(60.195132,24.933472);
+		}
+		
+		var postalCodeMapping = {
+			00002: "Helsinki",
+			00010: "Postikeskus",
+			00100: "Kamppi, Etu-Töölö, Kaisaniemi, Hietaniemi, Kluuvi",
+			00102: "Eduskunta",
+			00120: "Punavuori, Hietalahti",
+			00130: "Kaartinkaupunki",
+			00140: "Kaivopuisto, Ullanlinna",
+			00150: "Hernesaari, Munkkisaari, Eira, Ullanlinna",
+			00160: "Katajanokka",
+			00170: "Kruununhaka",
+			00180: "Ruoholahti, Salmisaari, Lapinlahti",
+			00190: "Suomenlinna",
+			00200: "Lauttasaari",
+			00210: "Lauttasaari, Vattuniemi",
+			00220: "Jätkäsaari, Länsisatama",
+			00230: "Kivihaka",
+			00240: "Pasila, Ilmala",
+			00250: "Taka-Töölö, Laakso, Meilahti, Eläintarha",
+			00260: "Töölö",
+			00270: "Laakso, Pikku Huopalahti",
+			00280: "Ruskeasuo",
+			00290: "Meilahden sairaala",
+			00300: "Pikku Huopalahti",
+			00310: "Kivihaka",
+			00320: "Haaga, Etelä-Haaga",
+			00330: "Munkkiniemi",
+			00340: "Lehtisaari, Kaskisaari, Kuusisaari",
+			00350: "Munkkivuori, Talinranta",
+			00360: "Pajamäki",
+			00370: "Marttila, Reimarla, Pitäjänmäki",
+			00380: "Pitäjänmäki",
+			00390: "Konala",
+			00400: "Pohjois-Haaga",
+			00410: "Malminkartano",
+			00420: "Kannelmäki",
+			00430: "Hakuninmaa, Maununneva",
+			00440: "Lassila",
+			00500: "Sörnäinen",
+			00510: "Kallio",
+			00520: "Itä-Pasila",
+			00530: "Hakaniemi",
+			00540: "Sompasaari",
+			00550: "Hermanni",
+			00560: "Vanhakaupunki",
+			00570: "Kulosaari",
+			00580: "Sörnäinen",
+			00590: "Tahvonlahti",
+			00600: "Käpylä, Koskela",
+			00610: "Käpylä",
+			00620: "Metsälä",
+			00630: "Maunula",
+			00640: "Patola",
+			00650: "Veräjämäki",
+			00660: "Länsi-Pakila",
+			00670: "Paloheinä",
+			00680: "Itä-Pakila",
+			00690: "Torpparinmäki",
+			00700: "Torpparinmäki",
+			00710: "Pihlajamäki",
+			00720: "Pukinmäki",
+			00730: "Tapanila",
+			00740: "Suutarila",
+			00750: "Tapulikaupunki",
+			00760: "Heikinlaakso, Puistola",
+			00770: "Jakomäki",
+			00780: "Tapaninvainio",
+			00790: "Latokartano",
+			00800: "Herttoniemi",
+			00810: "Herttoniemenranta",
+			00820: "Roihuvuori",
+			00830: "Tammisalo",
+			00840: "Yliskylä",
+			00850: "Jollas",
+			00860: "Santahamina",
+			00870: "Hevossalmi",
+			00880: "Roihuvuori",
+			00890: "Östersundom",
+			00900: "Puotinharju",
+			00910: "Puotila",
+			00920: "Myllypuro",
+			00930: "Marjaniemi",
+			00940: "Kontula",
+			00950: "Vartioharju",
+			00960: "Vuosaari",
+			00970: "Mellunmäki",
+			00980: "Meri-Rastila",
+			00990: "Aurinkolahti",
+			02100: "Tapiola, Hakalehto",
+			02110: "Tapiola",
+			02120: "Suvikumpu, Hakalehto",
+			02130: "Pohjois-Tapiola, Koivu-Mankkaa, Pyhäristi",
+			02140: "Laajalahti, Laajaranta, Friisinmäki",
+			02150: "Otaniemi, Keilaniemi, Maari",
+			02160: "Westend",
+			02170: "Haukilahti",
+			02180: "Mankkaa, Seilimäki, Klovi, Taavinkylä",
+			02200: "Suvikumpu, Henttaa, Kokinkylä, Lystimäki, Piispankylä",
+			02210: "Puolarmetsä, Puolarmaari, Olari, Kuitinmäki, Piispankylä",
+			02230: "Matinkylä, Tiistilä, Nuottalahti, Nuottaniemi, Koivuniemi, Iirislahti",
+			02240: "Friisilä",
+			02260: "Kaitaa, Riilahti, Hyljelahti, Iivisniemi",
+			02270: "Eestinmäki, Hannus, Nuottalahti",
+			02280: "Eestinlaakso, Kukkumäki, Malminmäki",
+			02290: "Puolarmetsän sairaala",
+			02300: "Nöykkiö",
+			02320: "Kivenlahti",
+			02330: "Kattilalaakso",
+			02340: "Latokaski",
+			02360: "Soukka, Soukanranta",
+			02380: "Rämsö, Suvisaaristo",
+			02600: "Leppävaara, Ruusutorppa, Säteri, Perkkaa, Ruukinranta, Yhdyskunanmäki",
+			02610: "Kilo, Karamalmi, Kuninkainen",
+			02620: "Rastaala, Rastaspuisto, Karakallio, Leppäsilta",
+			02630: "Nihtisilta, Nuijala, Lansa",
+			02650: "Vallikallio, Mäkkylä, Puustellinmäki",
+			02660: "Lintuvaara",
+			02680: "Lehtovuori",
+			02710: "Viherlaakso",
+			02720: "Karakallio",
+			02730: "Laaksolahti",
+			02740: "Karhusuo, Bemböle",
+			02750: "Kuurinniitty, Sepänkylä",
+			02760: "Espoonkeskus",
+			02770: "Espoonkeskus",
+			02780: "Espoonkartano",
+			02810: "Gumböle, Hirvisuo",
+			02820: "Brobacka, Nuuksio",
+			02860: "Nuuksio",
+			02920: "Kalajärvi",
+			02940: "Lippajärvi",
+			02970: "Kalajärvi, Metsämaa",
+			02980: "Espoo",
+			01009: "Vantaa",
+			01200: "Nissas, Sotunki",
+			01230: "Vaarala, Kuussilta, Suurmetsä",
+			01260: "Kolohonka, Kuninkaanmäki, Itä-Hakkila",
+			01280: "Länsimäki, Rajakylä",
+			01300: "Koivuhaka, Simonkallio, Viertola, Kukkaketo",
+			01350: "Simonkylä, Malminiitty, Hiekkaharju",
+			01360: "Koivukylä, Rautkallio, Havukoski, Sahamäki",
+			01370: "Jokiniemi, Satomäki, Maarinkunnas, Stenkulla",
+			01380: "Kuusikko, Kanerva, Hakkila, Hakkilankallio, Porttipuisto",
+			01390: "Kylmäoja, Ilola, Harjusuo, Ruskeasanta",
+			01400: "Rekolanmäki, Asola, Rekola, Matari, Rekolanranta, Päiväkumpu",
+			01420: "Päiväkumpu, Rekolanranta",
+			01450: "Korkinmäki, Vähä-Muori, Vallinoja, Leppäkorpi, Korso",
+			01480: "Maarukanmetsä, Jokivarsi, Haapala",
+			01490: "Pohjois-Nikinmäki, Nikinmäki, Viirilä",
+			01510: "Virkamies, Veromies, Veromiehenkylä, Veromäki, Köyhämäki, Sandbacka, ",
+			01530: "Lentoasema",
+			01600: "Louhela, Jönsas, Kilteri",
+			01610: "Gruva, Silvola, Kaivoksela, Vaskipelto",
+			01620: "Tyttökumpu, Kivimäki, Martinlaakso",
+			01630: "Hämeenkylä, Backas, Långbacka, Linnainen",
+			01640: "Linnainen, Koivuvaara, Hämevaara",
+			01650: "Pellas, Vapaala, Rajatorppa",
+			01660: "Varisto",
+			01670: "Vantaanlaakso, Smeds, Viherkumpu, Perkiö",
+			01680: "Koivurinne, Askisto",
+			01690: "Ylästö, Tolkinmetsä, Tolkinkylä, Mansikkamäki",
+			01700: "Rauhala, Kannisto, Kivistö",
+			01710: "Pähikärinne",
+			01730: "Sotilaskorpi, Rajasilta, Lapinniitty, Petas, Vantaanpuisto",
+			01750: "Keimola",
+			01760: "Männikkö, Pirttiranta, Seutula, Koivikko, Tapola",
+		}
+		</script>
     </body>
 </html>
