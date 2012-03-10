@@ -214,7 +214,7 @@ init_http = function () {
 		var uri = url.parse(request.url).pathname
 		var filename = path.join(process.cwd(), uri);
 
-    	var ua = null;
+    	var ua = "kimppis";
         if (request && request.headers['user-agent']) {
             ua = request.headers['user-agent'].toLowerCase();
         }
