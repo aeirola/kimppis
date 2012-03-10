@@ -99,8 +99,11 @@ taksi.add_request_to_route = function(incoming_request, route, callback) {
 		route.requests = route.requests || []
 		route.requests.push(request.id);
 		route.save(function () {
-			// Return the created request
-			taksi.get_route_data(request.id, route.id, callback);
+            // Update request places
+            Request.update({ route: route.id }, {places: route.places}, { multi: true }, function () {
+    			// Return the created request
+    			taksi.get_route_data(request.id, route.id, callback);
+            });
 		});
 	});
 }
@@ -263,7 +266,7 @@ init_database = function() {
     var Request = new Schema({
         stand    	: {type: ObjectId, index: true, ref: 'Stand', required: true},
         route    	: {type: ObjectId, index: true, ref: 'Route', required: true},
-		persons		: {type: Number, default: 4},
+		persons		: {type: Number, default: 1},
 		date		: {type: Date, default: Date.now},
 		completed	: {type: Boolean, default: false},
 		places		: {type: Number, default: 4},
@@ -278,7 +281,7 @@ init_database = function() {
     var Route = new Schema({
         stand    	: {type: ObjectId, index: true, ref: 'Stand'},
 		date		: {type: Date, default: Date.now},
-		places		: Number,
+		places		: {type: Number, default: 4},
 		requests	: [],
 		completed	: {type: Boolean, default: false}
     });

@@ -1,216 +1,226 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>
-        </title>
-        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.css" />
-        <style>
-          /* App custom styles */
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>
+	</title>
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.css" />
+	<style>
+		/* App custom styles */
 		  
-		  body, div.content {
-			  height: 100%;
-		  }
+		body, div.content {
+			height: 100%;
+		}
 		  
-		  td {
-		    padding: 0px 10px 5px 0px;
-		    vertical-align: top;	
-		  }
-        </style>
-		<script src="http://www.google.com/jsapi" type="text/javascript"></script>        
-        <script type="text/javascript">
-			google.load("maps", "3", {'other_params':'sensor=true'});
-			google.load("jquery", "1.7");
-		</script>
+		td {
+			padding: 0px 10px 5px 0px;
+			vertical-align: top;	
+		}
+	</style>
+	<script src="http://www.google.com/jsapi" type="text/javascript"></script>        
+	<script type="text/javascript">
+		google.load("maps", "3", {'other_params':'sensor=true'});
+		google.load("jquery", "1.7");
+	</script>
 		
-        <script src="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.js">
-        </script>
-		<script src="js/jquery.ui.map.full.min.js" type="text/javascript">
-		</script>
-    </head>
-    <body>
-        <div class="content" data-role="page" id="page1">
-            <div data-theme="a" data-role="header">
-                <h3>
-                    Destination
-                </h3>
-                <a data-role="button" data-transition="flip" href="#page2" class="ui-btn-right">
-                    Settings
-                </a>
-            </div>
-            <div class="content" data-role="content">
-				<div id="map_canvas" style="width:100%;height:90%"></div>
-            </div>
-        </div>
-
-        <div data-role="page" id="page2">
-            <div data-theme="a" data-role="header">
-                <h3>
-                    Settings
-                </h3>
-                <a data-role="button" data-rel="back" data-direction="reverse" data-transition="slide" href="#page1">
-                    Back
-                </a>
-            </div>
-            <div data-role="content">
-                <div data-role="fieldcontain">
-                    <fieldset data-role="controlgroup" data-type="vertical">
-                        <legend>
-                            Size of your group:
-                        </legend>
-                        <input name="radiobuttons1" id="radio1" value="radio1" type="radio" selected="selected" checked="checked"/>
-                        <label for="radio1">
-                            1 person
-                        </label>
-                        <input name="radiobuttons1" id="radio2" value="radio2" type="radio" />
-                        <label for="radio2">
-                            2 persons
-                        </label>
-                        <input name="radiobuttons1" id="radio3" value="radio3" type="radio" />
-                        <label for="radio3">
-                            3 persons
-                        </label>
-                        <input name="radiobuttons1" id="radio4" value="radio4" type="radio" />
-                        <label for="radio4">
-                            4 persons
-                        </label>
-                    </fieldset>
-                </div>
-               <div class="ui-grid-a">
-                    <div class="ui-block-a">
-                        <p>
-                            Looking for<br /> Kimppis buddies?
-                        </p>
-                    </div>
-                    <div class="ui-block-b">
-                        <div data-role="fieldcontain">
-                            <fieldset data-role="controlgroup">
-                                <label for="toggleswitch1">
-                                </label>
-                                <select name="toggleswitch1" id="toggleswitch1" data-theme="" data-role="slider">
-                                    <option value="off">
-                                        No
-                                    </option>
-                                    <option value="on" selected="selected">
-                                        Yes
-                                    </option>
-                                </select>
-                            </fieldset>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div data-role="page" id="page3">
-            <div data-theme="a" data-role="header">
-                <h3>
-                    My Kimppis
-                </h3>
-                <a data-role="button" data-direction="reverse" data-transition="slide" href="#page1">
-                    Back
-                </a>
-                <a data-role="button" data-transition="flip" href="#page7" class="ui-btn-right">
-                    Map
-                </a>
-            </div>
-            <div data-role="content">
-                <table>
-	               <tr><td><strong>From</strong></td><td id="from_address">Searching...</td></tr>
-	               <tr><td><strong>To</strong></td><td id="to_address">Searching...</td></tr>
-                    <tr><td></td><td></td></tr>
+	<script src="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.js">
+	</script>
+	<script src="js/jquery.ui.map.full.min.js" type="text/javascript">
+	</script>
+</head>
+<body>
+	<div class="content" data-role="page" id="page1">
+		<div data-theme="a" data-role="header">
+			<h3>
+				Destination
+			</h3>
+			<a data-role="button" data-transition="flip" href="#page2" class="ui-btn-right">
+				Settings
+			</a>
+		</div>
+		<div class="content" data-role="content">
+			<div id="map_canvas" style="width:100%;height:90%"></div>
+		</div>
+	</div>
+	
+	<div data-role="page" id="page2">
+		<div data-theme="a" data-role="header">
+			<h3>
+				Settings
+			</h3>
+			<a data-role="button" data-rel="back" data-direction="reverse" data-transition="slide" href="#page1">
+				Back
+			</a>
+		</div>
+		<div data-role="content">
+			<div data-role="fieldcontain">
+				<fieldset data-role="controlgroup" data-type="vertical">
+					<legend>
+						Size of your group:
+					</legend>
+					<input name="radiobuttons1" id="radio1" value="radio1" type="radio" selected="selected" checked="checked"/>
+					<label for="radio1">
+						1 person
+					</label>
+					<input name="radiobuttons1" id="radio2" value="radio2" type="radio" />
+					<label for="radio2">
+						2 persons
+					</label>
+					<input name="radiobuttons1" id="radio3" value="radio3" type="radio" />
+					<label for="radio3">
+						3 persons
+					</label>
+					<input name="radiobuttons1" id="radio4" value="radio4" type="radio" />
+					<label for="radio4">
+						4 persons
+					</label>
+				</fieldset>
+			</div>
+			<div class="ui-grid-a">
+				<div class="ui-block-a">
+					<p>
+						Looking for<br /> Kimppis buddies?
+					</p>
+				</div>
+				<div class="ui-block-b">
+					<div data-role="fieldcontain">
+						<fieldset data-role="controlgroup">
+							<label for="toggleswitch1">
+							</label>
+							<select name="toggleswitch1" id="toggleswitch1" data-theme="" data-role="slider">
+								<option value="off">
+									No
+								</option>
+								<option value="on" selected="selected">
+									Yes
+								</option>
+							</select>
+						</fieldset>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div data-role="page" id="page3">
+		<div data-theme="a" data-role="header">
+			<h3>
+				My Kimppis
+			</h3>
+			<a data-role="button" data-direction="reverse" data-transition="slide" href="#page1">
+				Back
+			</a>
+			<a data-role="button" data-transition="flip" href="#page7" class="ui-btn-right">
+				Map
+			</a>
+		</div>
+		<div data-role="content">
+			<table>
+				<tr><td><strong>From</strong></td><td id="from_address">Searching...</td></tr>
+				<tr><td><strong>To</strong></td><td id="to_address">Searching...</td></tr>
+				<tr><td></td><td></td></tr>
 					
-	               <tr class="yksis"><td colspan="2"><h3>Waiting for Kimppis buddies to share a taxi with you!</h3></td></tr>
+				<tr class="yksis"><td colspan="2"><h3>Waiting for Kimppis buddies to share a taxi with you!</h3></td></tr>
 				   
-	               <tr class="kimppis" style="display:none">
-					   <td colspan="2"><h3>Found <span id="kimppises">?</span> Kimppis buddies to share a taxi with you!</h3></td>
-				   </tr>
+				<tr class="kimppis" style="display:none">
+					<td colspan="2"><h3>Found <span id="kimppises">?</span> Kimppis buddies to share a taxi with you!</h3></td>
+				</tr>
 				   
-                   <tr class="kimppis" style="display:none"><td></td><td></td></tr>
-	               <tr class="kimppis" style="display:none"><td><strong>Price</strong></td><td>
-		              <table>
-			             <tr><td>Normal:</td><td><span id="normal_price">??</span> €</td></tr>
-			             <tr><td><strong>Kimppis:</strong></td><td><strong><span id="kimppis_price">??</span> €</strong></td>
-				        <tr><td>You save:</td><td><span id="saved_price">??</span> €!</td>
-		              </table>
-		          </td></tr>
-	           </table>
-                <a class="kimppis" style="display:none" data-role="button" data-transition="slide" href="#page4">
-                    Accept
-                </a>
-            </div>
-        </div>
+				<tr class="kimppis" style="display:none"><td></td><td></td></tr>
+				<tr class="kimppis" style="display:none"><td><strong>Price</strong></td><td>
+					<table>
+						<tr>
+							<td>Normal:</td>
+							<td style="text-align:right;"><span id="normal_price">??</span> €</td>
+						</tr>
+						<tr>
+							<td>Kimppis:</td>
+							<td style="text-align:right;"><span id="kimppis_price">??</span> €</td>
+						</tr>
+						<tr style="text-align:right;">
+							<td style="border-top: solid 1px black;"><strong>You save:</strong></td>
+							<td style="border-top: solid 1px black;"><strong><span id="saved_price">??</span> €</strong></td>
+						</tr>
+					</table>
+					</td>
+				</tr>
+			</table>
+			<a class="kimppis" style="display:none;max-width: 200px;" data-role="button" data-transition="slide" href="#page4">
+				Accept
+			</a>
+		</div>
+	</div>
 
-        <div data-role="page" id="page4">
-            <div data-theme="a" data-role="header">
-                <h3>
-                    Find buddies
-                </h3>
-                <a data-role="button" data-direction="reverse" data-transition="slide" href="#page3">
-                    Back
-                </a>
-            </div>
-            <div data-role="content">
-                <img src="img/kimppis02.png" alt="" />
-                <h3>Please lift your phone to find your buddies!</h3>
-                <a data-role="button" data-transition="slide" href="#page5">
-                    Ready!
-                </a>
-            </div>
-        </div>
+	<div data-role="page" id="page4">
+		<div data-theme="a" data-role="header">
+			<h3>
+				Find buddies
+			</h3>
+			<a data-role="button" data-direction="reverse" data-transition="slide" href="#page3">
+				Back
+			</a>
+		</div>
+		<div data-role="content">
+			<img src="img/kimppis02.png" alt="" />
+			<h3>Please lift your phone to find your buddies!</h3>
+			<a data-role="button" data-transition="slide" href="#page5">
+				Ready!
+			</a>
+		</div>
+	</div>
 
-        <div data-role="page" id="page5">
-            <div data-theme="a" data-role="header">
-                <h3>
-                    Find buddies
-                </h3>
-                <a data-role="button" data-direction="reverse" data-transition="slide" href="#page4">
-                    Back
-                </a>
-            </div>
-            <div data-role="content">
-	           <a data-transition="slide" href="#page6"><img src="img/kimppis-flash.gif" alt="" /></a>
-            </div>
-        </div>
+	<div data-role="page" id="page5">
+		<div data-theme="a" data-role="header">
+			<h3>
+				Find buddies
+			</h3>
+			<a data-role="button" data-direction="reverse" data-transition="slide" href="#page4">
+				Back
+			</a>
+		</div>
+		<div data-role="content">
+			<a data-transition="slide" href="#page6"><img src="img/kimppis-flash.gif" alt="" /></a>
+		</div>
+	</div>
 
-        <div data-role="page" id="page6">
-            <div data-theme="a" data-role="header">
-                <h3>
-                    Fare breakdown
-                </h3>
-                <a data-role="button" data-direction="reverse" data-transition="slide" href="#page5">
-                    Back
-                </a>
-                <a data-role="button" data-transition="flip" href="#page7" class="ui-btn-right">
-                    Route
-                </a>
-            </div>
-            <div data-role="content">
-                <h3>Destinations</h3>
-                <table id="route_summary_table" style="width: 100%;">
-	           	</table>
-			   	<p>
-				   <a href="https://docs.google.com/spreadsheet/viewform?formkey=dHZ3NXZ5LTVOMDNTd01JdjVneHNnQWc6MQ">Give feedback!</a>
-				</p>
-            </div>
-        </div>
+	<div data-role="page" id="page6">
+		<div data-theme="a" data-role="header">
+			<h3>
+				Fare breakdown
+			</h3>
+			<a data-role="button" data-direction="reverse" data-transition="slide" href="#page5">
+				Back
+			</a>
+			<a data-role="button" data-transition="flip" href="#page7" class="ui-btn-right">
+				Route
+			</a>
+		</div>
+		<div data-role="content">
+			<h3>Destinations</h3>
+			<table id="route_summary_table" style="width: 100%;">
+			</table>
+			<p>
+				<a href="https://docs.google.com/spreadsheet/viewform?formkey=dHZ3NXZ5LTVOMDNTd01JdjVneHNnQWc6MQ">Give feedback!</a>
+			</p>
+		</div>
+	</div>
 
-		<div class="content" data-role="page" id="page7">
-            <div data-theme="a" data-role="header">
-                <h3>
-                    Route
-                </h3>
-                <a data-role="button" data-rel="back" data-direction="reverse" data-transition="slide" href="#page6">
-                    Back
-                </a>
-            </div>
-            <div class="content"  data-role="content">
-	            <div class="content" data-role="content">
-					<div class="content" id="route_map_canvas" style="width:100%;height:100%"></div>
-	            </div>
-            </div>
-        </div>
+	<div class="content" data-role="page" id="page7">
+		<div data-theme="a" data-role="header">
+			<h3>
+				Route
+			</h3>
+			<a data-role="button" data-rel="back" data-direction="reverse" data-transition="slide" href="#page6">
+				Back
+			</a>
+		</div>
+		<div class="content"  data-role="content">
+			<div class="content" data-role="content">
+				<div class="content" id="route_map_canvas" style="width:100%;height:100%"></div>
+			</div>
+		</div>
+	</div>
         
 		
 		
@@ -312,11 +322,12 @@
 		 * Page 3 (Route data)
 		 */
         $('#page3').live("pageshow", function() {
-			if (route) {
+			if (!position_latLng || !destination_latLng) {
+				$.mobile.changePage($('#page1'));
 				return;
 			}
 			
-			if (!position_latLng || !destination_latLng) {
+			if (route) {
 				return;
 			}
 			
@@ -358,7 +369,23 @@
 			geocoder.geocode({'latLng': latlng}, function(results, status) {
 				if (status == google.maps.GeocoderStatus.OK) {
 					if (results[0]) {
-						var string = results[0].formatted_address;
+						var components = results[0].address_components;
+						var hood = "";
+						var postal_code = "";
+						var city = "";
+						for (i in components) {
+							switch(components[i].types[0]) {
+							case 'postal_code':
+								postal_code = components[i].long_name;
+								hood = postalCodeMapping[postal_code];
+								break;
+							case 'administrative_area_level_3':
+								city = components[i].long_name;
+								break;
+							}
+						}
+						
+						var string =  postal_code + " " + hood + ", " + city;
 						callback(string);
 					}
 				} else {
@@ -388,7 +415,7 @@
 			if (requests.length >= 2) {
 				$('#page3 .yksis').hide();
 				$('#page3 .kimppis').show();
-				$('#page3 #kimppises').html(requests.length);
+				$('#page3 #kimppises').html(requests.length -1);
 			} else {
 				$('#page3 .yksis').show();
 				$('#page3 .kimppis').hide();
@@ -413,13 +440,13 @@
 			
 			var distances = [];
 			directionsService.route(request, function(result, status) {
-			    if (status == google.maps.DirectionsStatus.OK) {
+			    if (status === google.maps.DirectionsStatus.OK) {
 					directions_result = result;
 					var legs = result.routes[0].legs;
 					var order = result.routes[0].waypoint_order;
 					for (var i = 0; i < legs.length; i++) {
-						if (i != 0 && i != legs.length-1) {
-							distances[order[i]+1] = legs[i].distance.value;
+						if (i !== legs.length-1) {
+							distances[order[i]] = legs[i].distance.value;
 						} else {
 							distances[i] = legs[i].distance.value;
 						}
@@ -443,6 +470,10 @@
 						}
 						total_data.distance = total_distance;
 						total_data.cost = total_cost;
+						
+						console.log(route_points);
+						console.log(total_data);
+						console.log(directions_result);
 						
 						kimppis_cost = costs[own_index];
 						normal_cost = calculate_costs([result.routes[0].legs[0].distance.value])[0];
@@ -469,7 +500,7 @@
 			var total_distance = 0;
 			for (var i = 0; i < persons; i++) {
 				total_distance += distances[i];
-				total_km_price += distances[i] * price_per_km/1000.0;
+				total_km_price += distances[i] * price_per_km/1000;
 			}
 			
 			// +10%
@@ -487,7 +518,7 @@
 		
 		start_price = function(date) {
 			// TODO: Compare with current date
-			return 5.5;
+			return 8.6;
 		}
 		
 		/*
@@ -495,9 +526,14 @@
 		 * Page 6 (Summary)
 		 */
 		$('#page6').live("pageshow", function() {
+			if (!route_points || !route_points.length) {
+				$.mobile.changePage($('#page1'));
+				return;
+			}
+			
 			var persons = route_points.length;
 			var table = $('#route_summary_table');
-			
+			table.empty();
 			var buddy;
 			var buddy_counter = 1;
 			for (var i = 0 ; i < persons ; i++ ) {
@@ -530,10 +566,14 @@
  		 * Page 7 (Route map)
  		 */
  		$('#page7').live("pageshow", function() {
+			if (!directions_result) {
+				$.mobile.changePage($('#page1'));
+				return;
+			}
+			
 			$('#route_map_canvas').gmap( { 'center': getLatLng(), 'callback': 
 				function (map) {
 					// Show directions
-					console.log(directions_result);
 					if (directions_result) {
 						directionsRenderer.setMap(map);
 				        directionsRenderer.setDirections(directions_result);
@@ -564,171 +604,171 @@
 		}
 		
 		var postalCodeMapping = {
-			00002: "Helsinki",
-			00010: "Postikeskus",
-			00100: "Kamppi, Etu-Töölö, Kaisaniemi, Hietaniemi, Kluuvi",
-			00102: "Eduskunta",
-			00120: "Punavuori, Hietalahti",
-			00130: "Kaartinkaupunki",
-			00140: "Kaivopuisto, Ullanlinna",
-			00150: "Hernesaari, Munkkisaari, Eira, Ullanlinna",
-			00160: "Katajanokka",
-			00170: "Kruununhaka",
-			00180: "Ruoholahti, Salmisaari, Lapinlahti",
-			00190: "Suomenlinna",
-			00200: "Lauttasaari",
-			00210: "Lauttasaari, Vattuniemi",
-			00220: "Jätkäsaari, Länsisatama",
-			00230: "Kivihaka",
-			00240: "Pasila, Ilmala",
-			00250: "Taka-Töölö, Laakso, Meilahti, Eläintarha",
-			00260: "Töölö",
-			00270: "Laakso, Pikku Huopalahti",
-			00280: "Ruskeasuo",
-			00290: "Meilahden sairaala",
-			00300: "Pikku Huopalahti",
-			00310: "Kivihaka",
-			00320: "Haaga, Etelä-Haaga",
-			00330: "Munkkiniemi",
-			00340: "Lehtisaari, Kaskisaari, Kuusisaari",
-			00350: "Munkkivuori, Talinranta",
-			00360: "Pajamäki",
-			00370: "Marttila, Reimarla, Pitäjänmäki",
-			00380: "Pitäjänmäki",
-			00390: "Konala",
-			00400: "Pohjois-Haaga",
-			00410: "Malminkartano",
-			00420: "Kannelmäki",
-			00430: "Hakuninmaa, Maununneva",
-			00440: "Lassila",
-			00500: "Sörnäinen",
-			00510: "Kallio",
-			00520: "Itä-Pasila",
-			00530: "Hakaniemi",
-			00540: "Sompasaari",
-			00550: "Hermanni",
-			00560: "Vanhakaupunki",
-			00570: "Kulosaari",
-			00580: "Sörnäinen",
-			00590: "Tahvonlahti",
-			00600: "Käpylä, Koskela",
-			00610: "Käpylä",
-			00620: "Metsälä",
-			00630: "Maunula",
-			00640: "Patola",
-			00650: "Veräjämäki",
-			00660: "Länsi-Pakila",
-			00670: "Paloheinä",
-			00680: "Itä-Pakila",
-			00690: "Torpparinmäki",
-			00700: "Torpparinmäki",
-			00710: "Pihlajamäki",
-			00720: "Pukinmäki",
-			00730: "Tapanila",
-			00740: "Suutarila",
-			00750: "Tapulikaupunki",
-			00760: "Heikinlaakso, Puistola",
-			00770: "Jakomäki",
-			00780: "Tapaninvainio",
-			00790: "Latokartano",
-			00800: "Herttoniemi",
-			00810: "Herttoniemenranta",
-			00820: "Roihuvuori",
-			00830: "Tammisalo",
-			00840: "Yliskylä",
-			00850: "Jollas",
-			00860: "Santahamina",
-			00870: "Hevossalmi",
-			00880: "Roihuvuori",
-			00890: "Östersundom",
-			00900: "Puotinharju",
-			00910: "Puotila",
-			00920: "Myllypuro",
-			00930: "Marjaniemi",
-			00940: "Kontula",
-			00950: "Vartioharju",
-			00960: "Vuosaari",
-			00970: "Mellunmäki",
-			00980: "Meri-Rastila",
-			00990: "Aurinkolahti",
-			02100: "Tapiola, Hakalehto",
-			02110: "Tapiola",
-			02120: "Suvikumpu, Hakalehto",
-			02130: "Pohjois-Tapiola, Koivu-Mankkaa, Pyhäristi",
-			02140: "Laajalahti, Laajaranta, Friisinmäki",
-			02150: "Otaniemi, Keilaniemi, Maari",
-			02160: "Westend",
-			02170: "Haukilahti",
-			02180: "Mankkaa, Seilimäki, Klovi, Taavinkylä",
-			02200: "Suvikumpu, Henttaa, Kokinkylä, Lystimäki, Piispankylä",
-			02210: "Puolarmetsä, Puolarmaari, Olari, Kuitinmäki, Piispankylä",
-			02230: "Matinkylä, Tiistilä, Nuottalahti, Nuottaniemi, Koivuniemi, Iirislahti",
-			02240: "Friisilä",
-			02260: "Kaitaa, Riilahti, Hyljelahti, Iivisniemi",
-			02270: "Eestinmäki, Hannus, Nuottalahti",
-			02280: "Eestinlaakso, Kukkumäki, Malminmäki",
-			02290: "Puolarmetsän sairaala",
-			02300: "Nöykkiö",
-			02320: "Kivenlahti",
-			02330: "Kattilalaakso",
-			02340: "Latokaski",
-			02360: "Soukka, Soukanranta",
-			02380: "Rämsö, Suvisaaristo",
-			02600: "Leppävaara, Ruusutorppa, Säteri, Perkkaa, Ruukinranta, Yhdyskunanmäki",
-			02610: "Kilo, Karamalmi, Kuninkainen",
-			02620: "Rastaala, Rastaspuisto, Karakallio, Leppäsilta",
-			02630: "Nihtisilta, Nuijala, Lansa",
-			02650: "Vallikallio, Mäkkylä, Puustellinmäki",
-			02660: "Lintuvaara",
-			02680: "Lehtovuori",
-			02710: "Viherlaakso",
-			02720: "Karakallio",
-			02730: "Laaksolahti",
-			02740: "Karhusuo, Bemböle",
-			02750: "Kuurinniitty, Sepänkylä",
-			02760: "Espoonkeskus",
-			02770: "Espoonkeskus",
-			02780: "Espoonkartano",
-			02810: "Gumböle, Hirvisuo",
-			02820: "Brobacka, Nuuksio",
-			02860: "Nuuksio",
-			02920: "Kalajärvi",
-			02940: "Lippajärvi",
-			02970: "Kalajärvi, Metsämaa",
-			02980: "Espoo",
-			01009: "Vantaa",
-			01200: "Nissas, Sotunki",
-			01230: "Vaarala, Kuussilta, Suurmetsä",
-			01260: "Kolohonka, Kuninkaanmäki, Itä-Hakkila",
-			01280: "Länsimäki, Rajakylä",
-			01300: "Koivuhaka, Simonkallio, Viertola, Kukkaketo",
-			01350: "Simonkylä, Malminiitty, Hiekkaharju",
-			01360: "Koivukylä, Rautkallio, Havukoski, Sahamäki",
-			01370: "Jokiniemi, Satomäki, Maarinkunnas, Stenkulla",
-			01380: "Kuusikko, Kanerva, Hakkila, Hakkilankallio, Porttipuisto",
-			01390: "Kylmäoja, Ilola, Harjusuo, Ruskeasanta",
-			01400: "Rekolanmäki, Asola, Rekola, Matari, Rekolanranta, Päiväkumpu",
-			01420: "Päiväkumpu, Rekolanranta",
-			01450: "Korkinmäki, Vähä-Muori, Vallinoja, Leppäkorpi, Korso",
-			01480: "Maarukanmetsä, Jokivarsi, Haapala",
-			01490: "Pohjois-Nikinmäki, Nikinmäki, Viirilä",
-			01510: "Virkamies, Veromies, Veromiehenkylä, Veromäki, Köyhämäki, Sandbacka, ",
-			01530: "Lentoasema",
-			01600: "Louhela, Jönsas, Kilteri",
-			01610: "Gruva, Silvola, Kaivoksela, Vaskipelto",
-			01620: "Tyttökumpu, Kivimäki, Martinlaakso",
-			01630: "Hämeenkylä, Backas, Långbacka, Linnainen",
-			01640: "Linnainen, Koivuvaara, Hämevaara",
-			01650: "Pellas, Vapaala, Rajatorppa",
-			01660: "Varisto",
-			01670: "Vantaanlaakso, Smeds, Viherkumpu, Perkiö",
-			01680: "Koivurinne, Askisto",
-			01690: "Ylästö, Tolkinmetsä, Tolkinkylä, Mansikkamäki",
-			01700: "Rauhala, Kannisto, Kivistö",
-			01710: "Pähikärinne",
-			01730: "Sotilaskorpi, Rajasilta, Lapinniitty, Petas, Vantaanpuisto",
-			01750: "Keimola",
-			01760: "Männikkö, Pirttiranta, Seutula, Koivikko, Tapola",
+			'00002': "Helsinki",
+			'00010': "Postikeskus",
+			'00100': "Kamppi, Etu-Töölö, Kaisaniemi, Hietaniemi, Kluuvi",
+			'00102': "Eduskunta",
+			'00120': "Punavuori, Hietalahti",
+			'00130': "Kaartinkaupunki",
+			'00140': "Kaivopuisto, Ullanlinna",
+			'00150': "Hernesaari, Munkkisaari, Eira, Ullanlinna",
+			'00160': "Katajanokka",
+			'00170': "Kruununhaka",
+			'00180': "Ruoholahti, Salmisaari, Lapinlahti",
+			'00190': "Suomenlinna",
+			'00200': "Lauttasaari",
+			'00210': "Lauttasaari, Vattuniemi",
+			'00220': "Jätkäsaari, Länsisatama",
+			'00230': "Kivihaka",
+			'00240': "Pasila, Ilmala",
+			'00250': "Taka-Töölö, Laakso, Meilahti, Eläintarha",
+			'00260': "Töölö",
+			'00270': "Laakso, Pikku Huopalahti",
+			'00280': "Ruskeasuo",
+			'00290': "Meilahden sairaala",
+			'00300': "Pikku Huopalahti",
+			'00310': "Kivihaka",
+			'00320': "Haaga, Etelä-Haaga",
+			'00330': "Munkkiniemi",
+			'00340': "Lehtisaari, Kaskisaari, Kuusisaari",
+			'00350': "Munkkivuori, Talinranta",
+			'00360': "Pajamäki",
+			'00370': "Marttila, Reimarla, Pitäjänmäki",
+			'00380': "Pitäjänmäki",
+			'00390': "Konala",
+			'00400': "Pohjois-Haaga",
+			'00410': "Malminkartano",
+			'00420': "Kannelmäki",
+			'00430': "Hakuninmaa, Maununneva",
+			'00440': "Lassila",
+			'00500': "Sörnäinen",
+			'00510': "Kallio",
+			'00520': "Itä-Pasila",
+			'00530': "Hakaniemi",
+			'00540': "Sompasaari",
+			'00550': "Hermanni",
+			'00560': "Vanhakaupunki",
+			'00570': "Kulosaari",
+			'00580': "Sörnäinen",
+			'00590': "Tahvonlahti",
+			'00600': "Käpylä, Koskela",
+			'00610': "Käpylä",
+			'00620': "Metsälä",
+			'00630': "Maunula",
+			'00640': "Patola",
+			'00650': "Veräjämäki",
+			'00660': "Länsi-Pakila",
+			'00670': "Paloheinä",
+			'00680': "Itä-Pakila",
+			'00690': "Torpparinmäki",
+			'00700': "Torpparinmäki",
+			'00710': "Pihlajamäki",
+			'00720': "Pukinmäki",
+			'00730': "Tapanila",
+			'00740': "Suutarila",
+			'00750': "Tapulikaupunki",
+			'00760': "Heikinlaakso, Puistola",
+			'00770': "Jakomäki",
+			'00780': "Tapaninvainio",
+			'00790': "Latokartano",
+			'00800': "Herttoniemi",
+			'00810': "Herttoniemenranta",
+			'00820': "Roihuvuori",
+			'00830': "Tammisalo",
+			'00840': "Yliskylä",
+			'00850': "Jollas",
+			'00860': "Santahamina",
+			'00870': "Hevossalmi",
+			'00880': "Roihuvuori",
+			'00890': "Östersundom",
+			'00900': "Puotinharju",
+			'00910': "Puotila",
+			'00920': "Myllypuro",
+			'00930': "Marjaniemi",
+			'00940': "Kontula",
+			'00950': "Vartioharju",
+			'00960': "Vuosaari",
+			'00970': "Mellunmäki",
+			'00980': "Meri-Rastila",
+			'00990': "Aurinkolahti",
+			'02100': "Tapiola, Hakalehto",
+			'02110': "Tapiola",
+			'02120': "Suvikumpu, Hakalehto",
+			'02130': "Pohjois-Tapiola, Koivu-Mankkaa, Pyhäristi",
+			'02140': "Laajalahti, Laajaranta, Friisinmäki",
+			'02150': "Otaniemi, Keilaniemi, Maari",
+			'02160': "Westend",
+			'02170': "Haukilahti",
+			'02180': "Mankkaa, Seilimäki, Klovi, Taavinkylä",
+			'02200': "Suvikumpu, Henttaa, Kokinkylä, Lystimäki, Piispankylä",
+			'02210': "Puolarmetsä, Puolarmaari, Olari, Kuitinmäki, Piispankylä",
+			'02230': "Matinkylä, Tiistilä, Nuottalahti, Nuottaniemi, Koivuniemi, Iirislahti",
+			'02240': "Friisilä",
+			'02260': "Kaitaa, Riilahti, Hyljelahti, Iivisniemi",
+			'02270': "Eestinmäki, Hannus, Nuottalahti",
+			'02280': "Eestinlaakso, Kukkumäki, Malminmäki",
+			'02290': "Puolarmetsän sairaala",
+			'02300': "Nöykkiö",
+			'02320': "Kivenlahti",
+			'02330': "Kattilalaakso",
+			'02340': "Latokaski",
+			'02360': "Soukka, Soukanranta",
+			'02380': "Rämsö, Suvisaaristo",
+			'02600': "Leppävaara, Ruusutorppa, Säteri, Perkkaa, Ruukinranta, Yhdyskunanmäki",
+			'02610': "Kilo, Karamalmi, Kuninkainen",
+			'02620': "Rastaala, Rastaspuisto, Karakallio, Leppäsilta",
+			'02630': "Nihtisilta, Nuijala, Lansa",
+			'02650': "Vallikallio, Mäkkylä, Puustellinmäki",
+			'02660': "Lintuvaara",
+			'02680': "Lehtovuori",
+			'02710': "Viherlaakso",
+			'02720': "Karakallio",
+			'02730': "Laaksolahti",
+			'02740': "Karhusuo, Bemböle",
+			'02750': "Kuurinniitty, Sepänkylä",
+			'02760': "Espoonkeskus",
+			'02770': "Espoonkeskus",
+			'02780': "Espoonkartano",
+			'02810': "Gumböle, Hirvisuo",
+			'02820': "Brobacka, Nuuksio",
+			'02860': "Nuuksio",
+			'02920': "Kalajärvi",
+			'02940': "Lippajärvi",
+			'02970': "Kalajärvi, Metsämaa",
+			'02980': "Espoo",
+			'01009': "Vantaa",
+			'01200': "Nissas, Sotunki",
+			'01230': "Vaarala, Kuussilta, Suurmetsä",
+			'01260': "Kolohonka, Kuninkaanmäki, Itä-Hakkila",
+			'01280': "Länsimäki, Rajakylä",
+			'01300': "Koivuhaka, Simonkallio, Viertola, Kukkaketo",
+			'01350': "Simonkylä, Malminiitty, Hiekkaharju",
+			'01360': "Koivukylä, Rautkallio, Havukoski, Sahamäki",
+			'01370': "Jokiniemi, Satomäki, Maarinkunnas, Stenkulla",
+			'01380': "Kuusikko, Kanerva, Hakkila, Hakkilankallio, Porttipuisto",
+			'01390': "Kylmäoja, Ilola, Harjusuo, Ruskeasanta",
+			'01400': "Rekolanmäki, Asola, Rekola, Matari, Rekolanranta, Päiväkumpu",
+			'01420': "Päiväkumpu, Rekolanranta",
+			'01450': "Korkinmäki, Vähä-Muori, Vallinoja, Leppäkorpi, Korso",
+			'01480': "Maarukanmetsä, Jokivarsi, Haapala",
+			'01490': "Pohjois-Nikinmäki, Nikinmäki, Viirilä",
+			'01510': "Virkamies, Veromies, Veromiehenkylä, Veromäki, Köyhämäki, Sandbacka, ",
+			'01530': "Lentoasema",
+			'01600': "Louhela, Jönsas, Kilteri",
+			'01610': "Gruva, Silvola, Kaivoksela, Vaskipelto",
+			'01620': "Tyttökumpu, Kivimäki, Martinlaakso",
+			'01630': "Hämeenkylä, Backas, Långbacka, Linnainen",
+			'01640': "Linnainen, Koivuvaara, Hämevaara",
+			'01650': "Pellas, Vapaala, Rajatorppa",
+			'01660': "Varisto",
+			'01670': "Vantaanlaakso, Smeds, Viherkumpu, Perkiö",
+			'01680': "Koivurinne, Askisto",
+			'01690': "Ylästö, Tolkinmetsä, Tolkinkylä, Mansikkamäki",
+			'01700': "Rauhala, Kannisto, Kivistö",
+			'01710': "Pähikärinne",
+			'01730': "Sotilaskorpi, Rajasilta, Lapinniitty, Petas, Vantaanpuisto",
+			'01750': "Keimola",
+			'01760': "Männikkö, Pirttiranta, Seutula, Koivikko, Tapola",
 		}
 		</script>
     </body>
