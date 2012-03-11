@@ -116,7 +116,7 @@ taksi.add_request_to_route = function(incoming_request, route, callback) {
 taksi.complete_request = function(request_id) {
 	console.log("complete_request("+ request_id +")");
 	var Request = mongoose.model('Request');
-	Request.update({id : request_id}, {$set: {completed: true}}, {multi: false});
+	Request.update({_id: request_id}, {completed: true}, {multi: false});
 }
 
 taksi.remove_request = function(request_id) {
@@ -136,7 +136,7 @@ taksi.remove_request = function(request_id) {
             }
             
             // Update other requests
-            Request.update({route: route._id}, {$set: {places: route.places}}, {multi: true});
+            Request.update({route: route._id}, {places: route.places}, {multi: true});
         });
         
         // Remove requets

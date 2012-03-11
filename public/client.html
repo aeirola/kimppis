@@ -244,8 +244,8 @@
 		//var SERVER = 'http://marvin.dy.fi:80/rest'
 		
 		// Variables
-		var persons = 1;
-		var finder = true;
+		var settings_persons = 1;
+		var settings_finder = true;
 		
 		var position_latLng = null;
 		var destination_latLng = null;
@@ -327,12 +327,12 @@
 		 * 
 		 * Page 2 (Settings)
 		 */
-		$('#radio1').change(function(event) {persons = 1});
-		$('#radio2').change(function(event) {persons = 2});
-		$('#radio3').change(function(event) {persons = 3});
-		$('#radio4').change(function(event) {persons = 4});
+		$('#radio1').change(function(event) {settings_persons = 1});
+		$('#radio2').change(function(event) {settings_persons = 2});
+		$('#radio3').change(function(event) {settings_persons = 3});
+		$('#radio4').change(function(event) {settings_persons = 4});
 		
-		$('#toggleswitch1').change(function(event) {finder = !finder});
+		$('#toggleswitch1').change(function(event) {settings_finder = !settings_finder});
 		
 		/*
 		 * 
@@ -352,6 +352,11 @@
 			latLng_to_string(destination_latLng, function(to_address) {
 				$('#to_address').html(to_address);
 				
+				if (!settings_finder) {
+					show_cost(to_address);
+					return;
+				}
+				
 				var route;
 				var request;
 				// Get route data
@@ -360,7 +365,7 @@
 					url: SERVER + "/request",
 					data: JSON.stringify({origin: [position_latLng.lng(), position_latLng.lat()],
 					   	destination: [destination_latLng.lng(), destination_latLng.lat()],
-				   	  	persons: persons,
+				   	  	persons: settings_persons,
 						destination_string: to_address
 					}), 
 					contentTypeString: 'application/json',
@@ -565,6 +570,43 @@
 			});
 		}
 		
+		function show_cost(address) {
+			var directions_request = {
+		    	origin: position_latLng,
+		      	destination: destination_latLng,
+				provideRouteAlternatives: false,
+				unitSystem: google.maps.UnitSystem.METRIC,
+		      	travelMode: google.maps.TravelMode.DRIVING
+		    };
+			
+			// Get single distance
+			directionsService.route(directions_request, function(result, status) {
+			    if (status === google.maps.DirectionsStatus.OK) {
+					var distance = result.routes[0].legs[0].distance.value;
+					var cost = calculate_cost(distance, settings_persons);
+			
+					route_points = [{
+						distance: distance,
+						cost: cost,
+						request: {
+							destination_string: address
+						}
+					}];
+					
+					total_data = {
+						distance: distance,
+						cost: cost
+					};
+					
+					own_index = 0;
+					
+					$.mobile.changePage($('#page6'));
+				} else {
+			    	console.log(status);
+				}
+			});
+		}
+		
 		/*
 		 * 
 		 * Page 4 (Get ready)
@@ -602,7 +644,7 @@
 			table.empty();
 			var buddy;
 			var buddy_counter = 1;
-			for (var i = 0 ; i < persons ; i++ ) {
+			for (i in route_points ) {
 				if (i == own_index) {
 					buddy = "You";
 				} else {
@@ -786,6 +828,7 @@
 					prices[j] += leg_cost / persons;
 				}
 				leg_persons -= requests[i].persons;
+				previous_leg_distance = distances[i];
 			}
 			return prices;
 		}
