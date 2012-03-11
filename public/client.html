@@ -252,16 +252,14 @@
 		
 		var directionsService;
 		var directionsRenderer;
+		var distanceMatrixService;
 		
 		var own_index = null;
 		var route = null;
 		var route_points = [];
 		var total_data = {}
-		var directions_result = null;
+
 		var notification_hash = "";
-		
-		var costs = [];
-		var cost_index = 0;
 		
 		var polling = false;
 		
@@ -359,6 +357,7 @@
 				
 				var route;
 				var request;
+				var requests;
 				// Get route data
 				$.ajax({
 					type: 'PUT',
@@ -373,6 +372,7 @@
 					success: function(route_data) {
 						route = route_data.route;
 						request = route_data.request;
+						requests = route_data.requests;
 						handle_route(route_data);
 
 						// Poll for updates
@@ -396,6 +396,7 @@
 				type: 'GET',
 				url: SERVER + "/route/" + route._id,
 				success: function(route_data) {
+					// TODO: don't handle unless updated
 					route_data.request = request;
 					handle_route(route_data);
 					setTimeout(function() { poll_request(route, request); }, 5000);
@@ -408,6 +409,7 @@
 		
 		$('#page3').live("pagecreate", function() {
 			directionsService = new google.maps.DirectionsService();
+			distanceMatrixService = new google.maps.DistanceMatrixService();
 		});
 		
 		$('#page3').live("pagehide", function() {
@@ -433,7 +435,6 @@
 			route = null;
 		});
 		
-		
 		function handle_route(route_data) {
 			// Get data
 			route = route_data.route;
@@ -455,61 +456,74 @@
 				$('#page3 .kimppis').hide();
 			}
 			
-			// Order furthest away to last place
-			var point_distances = [];
+			// Build destination matrix request
+			var origins = [buildLatLng(stand.position)]
+			var destinations = []
 			for (i in requests) {
-				point_distances[i] = getDistance(stand.position, requests[i].destination);
+				var latlng = buildLatLng(requests[i].destination);
+				origins.push(latlng);
+				destinations.push(latlng);
 			}
 			
-			var max_index = 0;
-			for (i in point_distances) {
-				if (point_distances[i] > point_distances[max_index]) {
-					max_index = i;
-				}
-			}
-			
-			// Swap
-			var tmp = requests[groups-1];
-			requests[groups-1] = requests[max_index];
-			requests[max_index] = tmp;
-			
-			// Calculate prices
-			var waypoints = [];
-			for (var i = 0; i < groups-1; i++) {
-				waypoints.push({location: buildLatLng(requests[i].destination)});
-			}
-			
-			var group_directions_request = {
-		    	origin: position_latLng,
-		      	destination: buildLatLng(requests[groups-1].destination),
-				waypoints: waypoints,
-				optimizeWaypoints: true,
-				provideRouteAlternatives: false,
-				unitSystem: google.maps.UnitSystem.METRIC,
-		      	travelMode: google.maps.TravelMode.DRIVING
-		    };
-			
-			var single_directions_request = {
-		    	origin: position_latLng,
-		      	destination: buildLatLng(request.destination),
-				provideRouteAlternatives: false,
-				unitSystem: google.maps.UnitSystem.METRIC,
-		      	travelMode: google.maps.TravelMode.DRIVING
-		    };
-			
-			
-			var group_result;
-			var single_result;
-			function handle_response() {
-				if (!group_result || !single_result) {
-					// Wait for other result
-					return;
+			distanceMatrixService.getDistanceMatrix({
+				origins: origins,
+				destinations: destinations,
+				travelMode: google.maps.TravelMode.DRIVING,
+				unitSystem: google.maps.UnitSystem.METRIC
+			}, function(matrix, status) {
+				if (status != google.maps.DistanceMatrixStatus.OK) {
+					console.log(status);
 				}
 				
+				var stop_count = destinations.length;
+				var stops = [];
+				for (var i = 0 ; i < stop_count ; i++) {
+					stops.push(i);
+				}
+				
+				var best_drive = [];
+				var best_cost = null;
+				function recurse(drive, stops) {
+					// Permutationing
+					if (stops.length) {
+						for (var i = 0 ; i < stops.length ;  i++) {
+						    var own_drive = drive.slice();
+						    own_drive.push(stops[i]);
+							recurse(own_drive, stops.slice(0,i).concat(stops.slice(i+1)));
+						}
+					} else {
+						// Get cost
+						var cost = 0;
+						var prev = -1;
+						for (i in drive) {
+							var element = matrix.rows[prev+1].elements[drive[i]];
+							cost += element.distance.value;
+							prev = drive[i];
+						}
+						if (!best_cost || cost < best_cost) {
+							best_drive = drive;
+							best_cost = cost;
+						}
+					}
+				}
+
+				recurse([], stops);
+				
+				// Sort requests
+				var sorted_requests = [];
+				for (i in best_drive) {
+					sorted_requests.push(requests[best_drive[i]]);
+				}
+				requests = sorted_requests;
+				
+				// Get distances
 				var distances = [];
-				directions_result = group_result;
-				distances = getDistances(group_result);
-				requests = orderRequests(requests, group_result);
+				var prev = -1;
+				var cumulative_distance = 0;
+				for (current in best_drive) {
+					cumulative_distance += matrix.rows[prev+1].elements[current].distance.value;
+					distances.push(cumulative_distance);
+				}
 				
 				// Get own id
 				for (i in requests) {
@@ -520,7 +534,7 @@
 				}
 				
 				costs = calculate_costs(distances, requests);
-						
+				
 				route_points = [];
 				var total_distance = 0;
 				var total_cost = 0;
@@ -537,36 +551,13 @@
 				total_data.cost = total_cost;
 				
 				kimppis_cost = costs[own_index];
-				normal_cost = calculate_cost(single_result.routes[0].legs[0].distance.value, request.persons);
+				normal_cost = calculate_cost(matrix.rows[0].elements[own_index].distance.value, request.persons);
 				difference = normal_cost - kimppis_cost;
 						
 				// Update values
 				$('#kimppis_price').html(Math.round(kimppis_cost*100)/100);
 				$('#normal_price').html(Math.round(normal_cost*100)/100);
 				$('#saved_price').html(Math.round(difference*100)/100);
-				
-				group_result = null;
-				single_result = null;
-			}
-			
-			// Get group distance
-			directionsService.route(group_directions_request, function(result, status) {
-			    if (status === google.maps.DirectionsStatus.OK) {
-					group_result = result;
-					handle_response();
-				} else {
-			    	console.log(status);
-				}
-			});
-			
-			// Get single distance
-			directionsService.route(single_directions_request, function(result, status) {
-			    if (status === google.maps.DirectionsStatus.OK) {
-					single_result = result;
-					handle_response();
-				} else {
-			    	console.log(status);
-				}
 			});
 		}
 		
@@ -674,18 +665,36 @@
  		 * Page 7 (Route map)
  		 */
  		$('#page7').live("pageshow", function() {
-			if (!directions_result) {
+			if (!route_points || !route_points.length) {
 				$.mobile.changePage($('#page1'), {reverse: true});
 				return;
 			}
 			
 			$('#route_map_canvas').gmap( { 'center': getLatLng(), 'callback': 
 				function (map) {
-					// Show directions
-					if (directions_result) {
-						directionsRenderer.setMap(map);
-				        directionsRenderer.setDirections(directions_result);
+					// Get route
+					var waypoints = [];
+					for (var i = 0; i < route_points.length-1; i++) {
+						waypoints.push({location: buildLatLng(route_points[i].request.destination)});
 					}
+					var directions_request = {
+				    	origin: buildLatLng(route.stand.position),
+				      	destination: buildLatLng(route_points[route_points.length-1].request.destination),
+						waypoints: waypoints,
+						provideRouteAlternatives: false,
+						unitSystem: google.maps.UnitSystem.METRIC,
+				      	travelMode: google.maps.TravelMode.DRIVING
+				    };
+					
+					// Show directions
+					directionsService.route(directions_request, function(result, status) {
+					    if (status == google.maps.DirectionsStatus.OK) {
+							directionsRenderer.setMap(map);
+					        directionsRenderer.setDirections(result);
+						} else {
+					    	console.log(status);
+						}
+					});
 				}
 			});
  		});
@@ -769,36 +778,6 @@
 		  Number.prototype.toRad = function() {
 		    return this * Math.PI / 180;
 		  }
-		}
-		
-		function getDistances(result) {
-			var legs = result.routes[0].legs;
-			
-			// Read distances
-			var distances = [];
-			var cumulative_distance = 0;
-			for (i in legs) {
-				cumulative_distance += legs[i].distance.value;
-				distances[i] = cumulative_distance;
-			}
-			
-			return distances;
-		}
-		
-		function orderRequests(requests, result) {
-			var optimized_order = result.routes[0].optimized_waypoint_order;
-			var order = result.routes[0].waypoint_order;
-			
-			// Order requests according to results
-			var ordered_requests = [];
-			for (var i = 0 ; i < requests.length-1 ; i++) {
-				ordered_requests[optimized_order[i]] = requests[order[i]];
-			}
-			// Last one doesn't move
-			ordered_requests[requests.length-1] = requests[requests.length-1];
-			requests = ordered_requests;
-			
-			return requests;
 		}
 		
 		function calculate_costs(distances, requests) {
