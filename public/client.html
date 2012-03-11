@@ -520,13 +520,13 @@
 				var total_distance = 0;
 				var total_cost = 0;
 				for (i in requests) {
-					total_distance += distances[i];
-					total_cost += costs[i];
 					route_points[i] = {
 						request: requests[i],
-						distance: total_distance,
+						distance: distances[i],
 						cost: costs[i]
 					};
+					total_distance = distances[i];
+					total_cost += costs[i];
 				}
 				total_data.distance = total_distance;
 				total_data.cost = total_cost;
@@ -602,7 +602,6 @@
 			table.empty();
 			var buddy;
 			var buddy_counter = 1;
-			var km_counter = 0;
 			for (var i = 0 ; i < persons ; i++ ) {
 				if (i == own_index) {
 					buddy = "You";
@@ -611,8 +610,7 @@
 					buddy_counter += 1;
 				}
 				var route_point = route_points[i];
-				km_counter += route_point.distance;
-				var km = km_counter / 1000;
+				var km = route_point.distance / 1000;
 				var cost = Math.round(route_point.cost*100)/100;
 				var address = route_point.request.destination_string;
 				
@@ -622,7 +620,7 @@
 				table.append('<tr><td colspan="2"><hr /></td></tr>');
 			}
 			
-			var total_km = km_counter / 1000;
+			var total_km = total_data.distance / 1000;
 			var total_cost = Math.round(total_data.cost*100)/100;
 			table.append('<tr><td><strong>TOTAL</strong> ('+ total_km +' km)</td>'+
 						 '<td style="float:right;"><strong>' + total_cost + ' €</strong></td></tr>');
@@ -734,11 +732,12 @@
 		function getDistances(result) {
 			var legs = result.routes[0].legs;
 			
-			var distances = [];
-			
 			// Read distances
+			var distances = [];
+			var cumulative_distance = 0;
 			for (i in legs) {
-				distances[i] = legs[i].distance.value;
+				cumulative_distance += legs[i].distance.value;
+				distances[i] = cumulative_distance;
 			}
 			
 			return distances;
@@ -778,11 +777,15 @@
 			var price_per_km = persons <= 2 ? 1.43 : 1.72;
 			price_per_km *= 1.10;
 			
-			var accumulative_km_price = 0;
+			var leg_persons = persons;
+			var previous_leg_distance = 0;
 			for (i in distances) {
-				accumulative_km_price += distances[i] * price_per_km/1000;
-				prices[i] = accumulative_km_price / persons;
-				persons -= requests[i].persons;
+				var leg_distance = distances[i] - previous_leg_distance;
+				var leg_cost = leg_distance * price_per_km/1000;
+				for (var j = i ; j < prices.length ; j++) {
+					prices[j] += leg_cost / persons;
+				}
+				leg_persons -= requests[i].persons;
 			}
 			return prices;
 		}
