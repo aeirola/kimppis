@@ -57,6 +57,9 @@ taksi.add_request = function(callback, incoming_request) {
 		var query = Request.find({});
 		query.where('stand', closest_stand.id);
 		query.where('completed', false);
+        var limit_date = new Date();
+        limit_date.setHours(new Date().getHours() - 4);
+        query.gte('date', limit_date);
 		query.gte('places', incoming_request.persons);
 		query.where('destination').near(incoming_request.destination).maxDistance(1);
 		
@@ -69,6 +72,8 @@ taksi.add_request = function(callback, incoming_request) {
 			var route;
 			
 			// TODO: Check if feasible at all!
+            
+            
 			if (!closest_request) {
 				// Create route
 				route = new Route();
@@ -191,6 +196,17 @@ router.map(function () {
 			});
 		});
     });
+    
+    /**
+    * _POST
+    */
+    
+    // Complete
+    this.put(/^rest\/request\/complete\/([a-z0-9_]+)$/).bind(function (req, res, request_id, data) {
+        taksi.complete_request(request_id);
+        res.end();
+    });
+    
     
     /**
     * _PUT
