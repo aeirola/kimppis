@@ -96,35 +96,52 @@ taksi.add_request_to_route = function(incoming_request, route, callback) {
 
 	// Create request
 	var request = new Request(incoming_request);
-	request.route = route.id;
+	request.route = route._id;
 	request.stand = route.stand;
 	request.save(function () {
 		// Return route and request id
 		route.places -= request.persons;
 		route.requests = route.requests || []
-		route.requests.push(request.id);
+		route.requests.push(request._id);
 		route.save(function () {
             // Update request places
-            Request.update({ route: route.id }, {places: route.places}, { multi: true }, function () {
+            Request.update({ route: route._id }, {places: route.places}, { multi: true }, function () {
     			// Return the created request
-    			taksi.get_route_data(request.id, route.id, callback);
+    			taksi.get_route_data(request._id, route._id, callback);
             });
 		});
 	});
 }
 
+taksi.complete_request = function(request_id) {
+	console.log("complete_request("+ request_id +")");
+	var Request = mongoose.model('Request');
+	Request.update({id : request_id}, {completed: true}, {multi: false});
+}
+
 taksi.remove_request = function(request_id) {
 	console.log("remove_request("+ request_id +")");
-	
+
 	var Request = mongoose.model('Request');
-	Request.findById(request_id).run(function (err, request) {
-		var route = request.route;
-		route.places -= request.places;
-		route.requests.
-		route.save(function() {
-			Request.remove({id: request_id});
-		});
-	});
+    Request.findById(request_id, function(request) {
+        var Route = mongoose.model('Route');
+        // Update route
+        Route.findById(request.route, function(route) {
+            route.places -= request.persons;
+            
+            if (route.places) {
+                route.save();
+            } else {
+                Route.remove({_id : route._id});
+            }
+            
+            // Update other requests
+            Request.update({route: route._id}, {places: route.places}, {multi: true});
+        });
+        
+        // Remove requets
+    	Request.remove({_id : request_id});
+    });
 }
 
 taksi.get_route_data = function(request_id, route_id, callback) {
@@ -186,7 +203,7 @@ router.map(function () {
     });
 	
 	// Get route information (for polling)
-    this.get(/^rest\/route\/([a-z0-9_]+)$/).bind(function (req, res, route_id) {
+    this.get(/^rest\/route\/([a-z0-9]+)$/).bind(function (req, res, route_id) {
         console.log("get_route(" + route_id +")");
         var Request = mongoose.model('Request');
 
@@ -202,9 +219,8 @@ router.map(function () {
     */
     
     // Complete
-    this.put(/^rest\/request\/complete\/([a-z0-9_]+)$/).bind(function (req, res, request_id, data) {
+    this.post(/^rest\/request\/complete\/([a-z0-9]+)$/).bind(function (req, res, request_id, data) {
         taksi.complete_request(request_id);
-        res.end();
     });
     
     
@@ -222,8 +238,8 @@ router.map(function () {
     */
 	
     // Remove request
-    this.del('/rest/requests').bind(function (req, res, request_id) {
-        taksi.remove_request(function (ret) {res.send(ret);}, request_id);
+    this.del(/^rest\/request\/([a-z0-9]+)$/).bind(function (req, res, request_id) {
+        taksi.remove_request(request_id);
     });
 });
 

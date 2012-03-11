@@ -159,8 +159,11 @@
 					</td>
 				</tr>
 			</table>
-			<a class="kimppis" style="display:none;max-width: 200px;" data-role="button" data-transition="slide" href="#page4">
+			<a id="accept_route" class="kimppis" style="display:none;max-width: 200px;" data-role="button" data-transition="slide" href="#page4">
 				Accept
+			</a>
+			<a id="discard_route" style="max-width: 200px;" data-role="button" data-transition="slide" data-back="true" href="#page1">
+				Discard
 			</a>
 		</div>
 	</div>
@@ -237,8 +240,8 @@
 
 	<script>
 		// Constants
-		//var SERVER = 'http://kimppis.dy.fi:80/rest'
-		var SERVER = 'http://marvin.dy.fi:80/rest'
+		var SERVER = 'http://kimppis.dy.fi:80/rest'
+		//var SERVER = 'http://marvin.dy.fi:80/rest'
 		
 		// Variables
 		var persons = 1;
@@ -337,7 +340,7 @@
 		 */
         $('#page3').live("pageshow", function() {
 			if (!position_latLng || !destination_latLng) {
-				$.mobile.changePage($('#page1'));
+				$.mobile.changePage($('#page1'), {reverse: true});
 				return;
 			}
 			
@@ -366,19 +369,20 @@
 						route = route_data.route;
 						request = route_data.request;
 						handle_route(route_data);
+
+						// Poll for updates
+						polling = true;
+						setTimeout(function() { poll_request(route, request); }, 5000);
+						
 					},
 					fail: function(jqXHR, textStatus) {
 						console.log(textStatus);
 					}
 				});
-				
-				// Poll for updates
-				polling = true;
-				setTimeout(function() { poll_request(route, request); }, 5000);
 			});
 		});
 		
-		poll_request = function(route, request) {
+		function poll_request(route, request) {
 			if (!polling) {
 				return;
 			}
@@ -386,7 +390,6 @@
 			$.ajax({
 				type: 'GET',
 				url: SERVER + "/route/" + route._id,
-				dataType: 'json',
 				success: function(route_data) {
 					route_data.request = request;
 					handle_route(route_data);
@@ -406,7 +409,27 @@
 			polling = false;
 		});
 		
-		handle_route = function(route_data) {
+		$('#accept_route').click(function() {
+			// Update database
+			$.ajax({
+				type: 'POST',
+				url: SERVER + "/request/complete/" + route_points[own_index].request._id
+			});
+		});
+		
+		$('#discard_route').click(function() {
+			// Update database
+			$.ajax({
+				type: 'DELETE',
+				url: SERVER + "/request/" + route_points[own_index].request._id
+			});
+			
+			// Update client
+			route = null;
+		});
+		
+		
+		function handle_route(route_data) {
 			// Get data
 			route = route_data.route;
 			var request = route_data.request;
@@ -472,7 +495,7 @@
 			
 			var group_result;
 			var single_result;
-			handle_response = function() {
+			function handle_response() {
 				if (!group_result || !single_result) {
 					// Wait for other result
 					return;
@@ -542,104 +565,27 @@
 			});
 		}
 		
-		getDistances = function(result) {
-			var legs = result.routes[0].legs;
-			
-			var distances = [];
-			
-			// Read distances
-			for (i in legs) {
-				distances[i] = legs[i].distance.value;
+		/*
+		 * 
+		 * Page 4 (Get ready)
+		 */
+		$('#page4').live("pageshow", function() {
+			if (!route_points || !route_points.length) {
+				$.mobile.changePage($('#page1'), {reverse: true});
+				return;
 			}
-			
-			return distances;
-		}
+		});
 		
-		orderRequests = function(requests, result) {
-			var optimized_order = result.routes[0].optimized_waypoint_order;
-			var order = result.routes[0].waypoint_order;
-			
-			// Order requests according to results
-			var ordered_requests = [];
-			for (var i = 0 ; i < requests.length-1 ; i++) {
-				ordered_requests[optimized_order[i]] = requests[order[i]];
+		/*
+		 * 
+		 * Page 5 (Attract)
+		 */
+		$('#page5').live("pageshow", function() {
+			if (!route_points || !route_points.length) {
+				$.mobile.changePage($('#page1'), {reverse: true});
+				return;
 			}
-			// Last one doesn't move
-			ordered_requests[requests.length-1] = requests[requests.length-1];
-			requests = ordered_requests;
-			
-			return requests;
-		}
-		
-		calculate_costs = function(distances, requests) {
-			var groups = distances.length;
-			var persons = 0;
-			for (i in requests) {
-				persons += requests[i].persons;
-			}
-			
-			var prices = [];
-			
-			// Starting price
-			var starting_price = start_price(new Date());
-			for (i in requests) {
-				prices[i] = starting_price * requests[i].persons / persons;
-			}
-			
-			var price_per_km = persons <= 2 ? 1.43 : 1.72;
-			price_per_km *= 1.10;
-			
-			var accumulative_km_price = 0;
-			for (i in distances) {
-				accumulative_km_price += distances[i] * price_per_km/1000;
-				prices[i] = accumulative_km_price / persons;
-				persons -= requests[i].persons;
-			}
-			return prices;
-		}
-		
-		calculate_cost = function(distance, persons) {
-			var starting_price = start_price(new Date());
-			var price_per_km = persons <= 2 ? 1.43 : 1.72;
-			return starting_price + price_per_km * distance / 1000;
-		}
-		
-		start_price = function(date) {			
-			var LO = 5.5;
-			var HI = 8.6;
-			
-			var hour = date.getHours();
-			var dateString = date.getMonth() + "." + date.getDay()
-			
-			var six_to_eight = hour >= 6 && hour < 20;
-			var six_to_four = hour >= 6 && hour < 16; 
-			
-			var holiday = holidays[dateString] || false;
-			var preholiday = preholidays[dateString] || false;
-			
-			if (holiday) {
-				return HI;
-			} else if (preholiday) {
-				return six_to_four ? LO : HI;
-			} else {
-				switch(date.getDay()) {
-					case 0:	// Sunday
-						return HI;
-					case 1:	// Monday
-					case 2:
-					case 3:
-					case 4:
-					case 5:
-						return six_to_eight ? LO : HI;
-					case 6:
-						return six_to_four ? LO : HI;
-				}
-			}
-		}
-		
-		isHolyday = function(date) {
-			
-		}
+		});
 		
 		/*
 		 * 
@@ -647,7 +593,7 @@
 		 */
 		$('#page6').live("pageshow", function() {
 			if (!route_points || !route_points.length) {
-				$.mobile.changePage($('#page1'));
+				$.mobile.changePage($('#page1'), {reverse: true});
 				return;
 			}
 			
@@ -689,7 +635,7 @@
  		 */
  		$('#page7').live("pageshow", function() {
 			if (!directions_result) {
-				$.mobile.changePage($('#page1'));
+				$.mobile.changePage($('#page1'), {reverse: true});
 				return;
 			}
 			
@@ -729,7 +675,7 @@
 			return new google.maps.LatLng(position[1], position[0]);
 		}
 		
-		latLng_to_string = function(latlng, callback) {
+		function latLng_to_string(latlng, callback) {
 			if (!latlng) {
 				callback("Unkown");
 				return;
@@ -783,6 +729,101 @@
 		  Number.prototype.toRad = function() {
 		    return this * Math.PI / 180;
 		  }
+		}
+		
+		function getDistances(result) {
+			var legs = result.routes[0].legs;
+			
+			var distances = [];
+			
+			// Read distances
+			for (i in legs) {
+				distances[i] = legs[i].distance.value;
+			}
+			
+			return distances;
+		}
+		
+		function orderRequests(requests, result) {
+			var optimized_order = result.routes[0].optimized_waypoint_order;
+			var order = result.routes[0].waypoint_order;
+			
+			// Order requests according to results
+			var ordered_requests = [];
+			for (var i = 0 ; i < requests.length-1 ; i++) {
+				ordered_requests[optimized_order[i]] = requests[order[i]];
+			}
+			// Last one doesn't move
+			ordered_requests[requests.length-1] = requests[requests.length-1];
+			requests = ordered_requests;
+			
+			return requests;
+		}
+		
+		function calculate_costs(distances, requests) {
+			var groups = distances.length;
+			var persons = 0;
+			for (i in requests) {
+				persons += requests[i].persons;
+			}
+			
+			var prices = [];
+			
+			// Starting price
+			var starting_price = start_price(new Date());
+			for (i in requests) {
+				prices[i] = starting_price * requests[i].persons / persons;
+			}
+			
+			var price_per_km = persons <= 2 ? 1.43 : 1.72;
+			price_per_km *= 1.10;
+			
+			var accumulative_km_price = 0;
+			for (i in distances) {
+				accumulative_km_price += distances[i] * price_per_km/1000;
+				prices[i] = accumulative_km_price / persons;
+				persons -= requests[i].persons;
+			}
+			return prices;
+		}
+		
+		function calculate_cost(distance, persons) {
+			var starting_price = start_price(new Date());
+			var price_per_km = persons <= 2 ? 1.43 : 1.72;
+			return starting_price + price_per_km * distance / 1000;
+		}
+		
+		function start_price(date) {			
+			var LO = 5.5;
+			var HI = 8.6;
+			
+			var hour = date.getHours();
+			var dateString = date.getMonth() + "." + date.getDay()
+			
+			var six_to_eight = hour >= 6 && hour < 20;
+			var six_to_four = hour >= 6 && hour < 16; 
+			
+			var holiday = holidays[dateString] || false;
+			var preholiday = preholidays[dateString] || false;
+			
+			if (holiday) {
+				return HI;
+			} else if (preholiday) {
+				return six_to_four ? LO : HI;
+			} else {
+				switch(date.getDay()) {
+					case 0:	// Sunday
+						return HI;
+					case 1:	// Monday
+					case 2:
+					case 3:
+					case 4:
+					case 5:
+						return six_to_eight ? LO : HI;
+					case 6:
+						return six_to_four ? LO : HI;
+				}
+			}
 		}
 		
 		var holidays = {
