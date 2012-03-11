@@ -125,6 +125,10 @@ taksi.remove_request = function(request_id) {
 	var Request = mongoose.model('Request');
     Request.findById(request_id, function(request) {
         var Route = mongoose.model('Route');
+        if (!request) {
+            return;
+        }
+        
         // Update route
         Route.findById(request.route, function(route) {
             route.places -= request.persons;
