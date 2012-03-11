@@ -237,8 +237,8 @@
 
 	<script>
 		// Constants
-		var SERVER = 'http://kimppis.dy.fi:80/rest'
-		//var SERVER = 'http://marvin.dy.fi:80/rest'
+		//var SERVER = 'http://kimppis.dy.fi:80/rest'
+		var SERVER = 'http://marvin.dy.fi:80/rest'
 		
 		// Variables
 		var persons = 1;
@@ -480,8 +480,6 @@
 				
 				var distances = [];
 				directions_result = group_result;
-				console.log(group_result);
-				console.log(single_result);
 				distances = getDistances(group_result);
 				requests = orderRequests(requests, group_result);
 				
@@ -509,8 +507,6 @@
 				}
 				total_data.distance = total_distance;
 				total_data.cost = total_cost;
-				
-				console.log(route_points);
 				
 				kimppis_cost = costs[own_index];
 				normal_cost = calculate_cost(single_result.routes[0].legs[0].distance.value, request.persons);
@@ -608,9 +604,41 @@
 			return starting_price + price_per_km * distance / 1000;
 		}
 		
-		start_price = function(date) {
-			// TODO: Compare with current date
-			return 8.6;
+		start_price = function(date) {			
+			var LO = 5.5;
+			var HI = 8.6;
+			
+			var hour = date.getHours();
+			var dateString = date.getMonth() + "." + date.getDay()
+			
+			var six_to_eight = hour >= 6 && hour < 20;
+			var six_to_four = hour >= 6 && hour < 16; 
+			
+			var holiday = holidays[dateString] || false;
+			var preholiday = preholidays[dateString] || false;
+			
+			if (holiday) {
+				return HI;
+			} else if (preholiday) {
+				return six_to_four ? LO : HI;
+			} else {
+				switch(date.getDay()) {
+					case 0:	// Sunday
+						return HI;
+					case 1:	// Monday
+					case 2:
+					case 3:
+					case 4:
+					case 5:
+						return six_to_eight ? LO : HI;
+					case 6:
+						return six_to_four ? LO : HI;
+				}
+			}
+		}
+		
+		isHolyday = function(date) {
+			
 		}
 		
 		/*
@@ -638,7 +666,7 @@
 				}
 				var route_point = route_points[i];
 				km_counter += route_point.distance;
-				var km = Math.round(km_counter*10)/10000;
+				var km = km_counter / 1000;
 				var cost = Math.round(route_point.cost*100)/100;
 				var address = route_point.request.destination_string;
 				
@@ -648,7 +676,7 @@
 				table.append('<tr><td colspan="2"><hr /></td></tr>');
 			}
 			
-			var total_km = Math.round(total_data.distance*10)/10000;
+			var total_km = km_counter / 1000;
 			var total_cost = Math.round(total_data.cost*100)/100;
 			table.append('<tr><td><strong>TOTAL</strong> ('+ total_km +' km)</td>'+
 						 '<td style="float:right;"><strong>' + total_cost + ' €</strong></td></tr>');
@@ -755,6 +783,34 @@
 		  Number.prototype.toRad = function() {
 		    return this * Math.PI / 180;
 		  }
+		}
+		
+		var holidays = {
+			"1.6":   1, // loppiainen (pe)
+			"4.6":   1, // pitkäperjantai (pe)
+			"4.9":   1, // toinen pääsiäispäivä (ma)
+			"5.1":   1, // vapunpäivä (ti)
+			"5.17":  1, // helatorstai (to)
+			"6.23":  1, // juhannus (la)
+			"11.3":  1, // pyhäinpäivä (la)
+			"12.6":  1, // itsenäisyyspäivä (to)
+			"12.24": 1, // jouluaatto (ma)
+			"12.25": 1, // joulupäivä (ti)
+			"12.26": 1  // tapaninpäivä (ke)
+		}
+		
+		var preholidays = {
+			"1.6":   1, // loppiainen (pe)
+			"4.6":   1, // pitkäperjantai (pe)
+			"4.9":   1, // toinen pääsiäispäivä (ma)
+			"5.1":   1, // vapunpäivä (ti)
+			"5.17":  1, // helatorstai (to)
+			"6.23":  1, // juhannus (la)
+			"11.3":  1, // pyhäinpäivä (la)
+			"12.6":  1, // itsenäisyyspäivä (to)
+			"12.24": 1, // jouluaatto (ma)
+			"12.25": 1, // joulupäivä (ti)
+			"12.26": 1  // tapaninpäivä (ke)
 		}
 		
 		var postalCodeMapping = {
