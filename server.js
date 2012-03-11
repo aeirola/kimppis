@@ -58,7 +58,7 @@ taksi.add_request = function(callback, incoming_request) {
 		query.where('stand', closest_stand.id);
 		query.where('completed', false);
 		query.gte('places', incoming_request.persons);
-		query.where('destination').near(incoming_request.destination).maxDistance(2);
+		query.where('destination').near(incoming_request.destination).maxDistance(1);
 		
 		query.findOne(function (err, closest_request) {
 			if (err) {
@@ -182,9 +182,12 @@ router.map(function () {
 	
 	// Get route information (for polling)
     this.get(/^rest\/route\/([a-z0-9_]+)$/).bind(function (req, res, route_id) {
+        console.log("get_route(" + route_id +")");
+        var Request = mongoose.model('Request');
+
 		taksi.get_route(route_id, function (route) {
 			Request.find({route: route_id}, function (err, requests) {
-				callback({route: route, requests: requests});
+				res.send({route: route, requests: requests});
 			});
 		});
     });

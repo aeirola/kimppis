@@ -238,6 +238,7 @@
 	<script>
 		// Constants
 		var SERVER = 'http://kimppis.dy.fi:80/rest'
+		//var SERVER = 'http://marvin.dy.fi:80/rest'
 		
 		// Variables
 		var persons = 1;
@@ -346,6 +347,8 @@
 			latLng_to_string(destination_latLng, function(to_address) {
 				$('#to_address').html(to_address);
 				
+				var route;
+				var request;
 				// Get route data
 				$.ajax({
 					type: 'PUT',
@@ -357,13 +360,37 @@
 					}), 
 					contentTypeString: 'application/json',
 					dataType: 'json',
-					success: handle_route,
+					success: function(route_data) {
+						route = route_data.route;
+						request = route_data.request;
+						handle_route(route_data);
+					},
 					fail: function(jqXHR, textStatus) {
 						console.log(textStatus);
 					}
 				});
+				
+				// Poll for updates
+				setTimeout(function() { poll_request(route, request); }, 5000);
 			});
 		});
+		
+		poll_request = function(route, request) {
+			$.ajax({
+				type: 'GET',
+				url: SERVER + "/route/" + route._id,
+				dataType: 'json',
+				success: function(route_data) {
+					route_data.request = request;
+					handle_route(route_data);
+					setTimeout(function() { poll_request(route, request); }, 5000);
+				},
+				fail: function(jqXHR, textStatus) {
+					console.log(textStatus);
+					setTimeout(function() { poll_request(route, request); }, 5000);
+				}
+			});
+		}
 		
 		$('#page3').live("pagecreate", function() {
 			directionsService = new google.maps.DirectionsService();
@@ -481,10 +508,6 @@
 						}
 						total_data.distance = total_distance;
 						total_data.cost = total_cost;
-						
-						console.log(route_points);
-						console.log(total_data);
-						console.log(directions_result);
 						
 						kimppis_cost = costs[own_index];
 						normal_cost = calculate_costs([result.routes[0].legs[0].distance.value])[0];
