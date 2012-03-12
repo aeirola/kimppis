@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 	<title>
 	</title>
 	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.css" />
@@ -240,8 +240,7 @@
 
 	<script>
 		// Constants
-		var SERVER = 'http://kimppis.dy.fi:80/rest'
-		//var SERVER = 'http://marvin.dy.fi:80/rest'
+		var REST_PATH = '/rest'
 		
 		// Variables
 		var settings_persons = 1;
@@ -361,7 +360,7 @@
 				// Get route data
 				$.ajax({
 					type: 'PUT',
-					url: SERVER + "/request",
+					url: REST_PATH + "/request",
 					data: JSON.stringify({origin: [position_latLng.lng(), position_latLng.lat()],
 					   	destination: [destination_latLng.lng(), destination_latLng.lat()],
 				   	  	persons: settings_persons,
@@ -394,7 +393,7 @@
 			
 			$.ajax({
 				type: 'GET',
-				url: SERVER + "/route/" + route._id,
+				url: REST_PATH + "/route/" + route._id,
 				success: function(route_data) {
 					// TODO: don't handle unless updated
 					route_data.request = request;
@@ -420,7 +419,7 @@
 			// Update database
 			$.ajax({
 				type: 'POST',
-				url: SERVER + "/request/complete/" + route_points[own_index].request._id
+				url: REST_PATH + "/request/complete/" + route_points[own_index].request._id
 			});
 		});
 		
@@ -428,7 +427,7 @@
 			// Update database
 			$.ajax({
 				type: 'DELETE',
-				url: SERVER + "/request/" + route_points[own_index].request._id
+				url: REST_PATH + "/request/" + route_points[own_index].request._id
 			});
 			
 			// Update client

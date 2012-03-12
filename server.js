@@ -16,7 +16,7 @@ var settings = {
 	places: 4,
     http: {
         host: '0.0.0.0',
-        port: 80
+        port: 8124
     },
     db: {
         database: 'kimppis',
