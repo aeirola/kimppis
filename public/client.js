@@ -325,11 +325,11 @@ function handle_route(route_data) {
         
 function show_cost(address) {
     var directions_request = {
-        origin: position_latLng,
-          destination: destination_latLng,
-        provideRouteAlternatives: false,
-        unitSystem: google.maps.UnitSystem.METRIC,
-          travelMode: google.maps.TravelMode.DRIVING
+            origin: position_latLng,
+            destination: destination_latLng,
+            provideRouteAlternatives: false,
+            unitSystem: google.maps.UnitSystem.METRIC,
+            travelMode: google.maps.TravelMode.DRIVING
     };
             
     // Get single distance
@@ -342,6 +342,8 @@ function show_cost(address) {
                 distance: distance,
                 cost: cost,
                 request: {
+                    origin: position_latLng,
+                    destination: destination_latLng,
                     destination_string: address
                 }
             }];
@@ -446,26 +448,35 @@ $('#page7').live("pagecreate", function() {
                                  streetViewControl: false,
                                  callback: 
         function (map) {
-            route_map = map;
+            directionsRenderer = new google.maps.DirectionsRenderer();
+            directionsRenderer.setOptions({
+                map: map,
+                hideRouteList: true
+            });
         }
-    });
-    
-    directionsRenderer = new google.maps.DirectionsRenderer();
-    directionsRenderer.setOptions({
-        draggable: false,
-        hideRouteList: false
     });
 });
 
 function drawRoute() {
     // Get route
+    
+    
+    var origin;
     var waypoints = [];
-    for (var i = 0; i < route_points.length-1; i++) {
-        waypoints.push({location: buildLatLng(route_points[i].request.destination)});
+    
+    if (settings_finder) {
+        for (var i = 0; i < route_points.length-1; i++) {
+            waypoints.push({location: buildLatLng(route_points[i].request.destination)});
+        }
+        origin = buildLatLng(route.stand.position);
+    } else {
+        origin = route_points[0].request.origin;
+        waypoints.push({location: route_points[0].request.destination});
     }
+    
     var directions_request = {
-        origin: buildLatLng(route.stand.position),
-        destination: buildLatLng(route_points[route_points.length-1].request.destination),
+        origin: origin,
+        destination: waypoints[waypoints.length-1].location,
         waypoints: waypoints,
         provideRouteAlternatives: false,
         unitSystem: google.maps.UnitSystem.METRIC,
@@ -475,7 +486,6 @@ function drawRoute() {
     // Show directions
     directionsService.route(directions_request, function(result, status) {
         if (status == google.maps.DirectionsStatus.OK) {
-            directionsRenderer.setMap(route_map);
             directionsRenderer.setDirections(result);
         } else {
             console.log(status);
