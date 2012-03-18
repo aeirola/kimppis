@@ -33,12 +33,12 @@ var watch;
  * 
  * Page 1 (Map)
  */
- $('#page1').live("pagehide", function() {
+$('#page1').live("pagehide", function() {
     if ( navigator.geolocation ) {
         navigator.geolocation.clearWatch(watch);
     }
 });
-                
+
 $('#page1').live("pagecreate", function() {
     $('#map_canvas').gmap( { center: getLatLng(), 
                              zoom: 11, 
@@ -459,24 +459,24 @@ $('#page7').live("pagecreate", function() {
 
 function drawRoute() {
     // Get route
-    
-    
     var origin;
+    var destination;
     var waypoints = [];
     
     if (settings_finder) {
+        origin = buildLatLng(route.stand.position);
+        destination = buildLatLng(route_points[route_points.length-1].request.destination);
         for (var i = 0; i < route_points.length-1; i++) {
             waypoints.push({location: buildLatLng(route_points[i].request.destination)});
         }
-        origin = buildLatLng(route.stand.position);
     } else {
         origin = route_points[0].request.origin;
-        waypoints.push({location: route_points[0].request.destination});
+        destination = route_points[0].request.destination;
     }
     
     var directions_request = {
         origin: origin,
-        destination: waypoints[waypoints.length-1].location,
+        destination: destination,
         waypoints: waypoints,
         provideRouteAlternatives: false,
         unitSystem: google.maps.UnitSystem.METRIC,
