@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<title>
+	</title>
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.css" />
+	<style>
+		/* App custom styles */
+		  
+		body, div.content {
+			height: 100%;
+		}
+		  
+		td {
+			padding: 0px 10px 5px 0px;
+			vertical-align: top;	
+		}
+	</style>
+	<script src="http://www.google.com/jsapi" type="text/javascript"></script>        
+	<script type="text/javascript">
+		google.load("maps", "3", {'other_params':'sensor=true'});
+		google.load("jquery", "1.7");
+	</script>
+	
+	<script src="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.js">
+	</script>
+	<script src="../js/jquery.ui.map.full.min.js" type="text/javascript">
+	</script>
+</head>
+<body>
+	<div class="content" data-role="page" id="page1">
+		<div data-theme="a" data-role="header">
+			<h3>
+				Destinations
+			</h3>
+			<a data-role="button" data-transition="slide" href="#page2" class="ui-btn-right">
+				Costs
+			</a>
+		</div>
+		<div class="content" data-role="content">
+			<div id="map_canvas" style="width:100%;height:90%"></div>
+		</div>
+	</div>
+	
+	<div data-role="page" id="page2">
+		<div data-theme="a" data-role="header">
+			<h3>
+				Fare breakdown
+			</h3>
+			<a data-role="button" data-direction="reverse" data-transition="slide" href="#page1">
+				Back
+			</a>
+		</div>
+		<div data-role="content">
+			<h3>Destinations</h3>
+			<table id="route_summary_table" style="width: 100%;">
+			</table>
+		</div>
+	</div>
+	
+	<!-- Application custom scripting -->
+	<script src="hinttis1.js">
+	</script>
+    </body>
+</html>
