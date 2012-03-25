@@ -36,16 +36,16 @@ $('#page1').live("pagecreate", function() {
         function (newMap) {
 			map = newMap;
 			navigator.geolocation.getCurrentPosition(function(position, status) {
-					var selfPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-	                // Add marker
+					origin = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+                    map.panTo(origin);
+	                
+					// Add marker
 					var marker = new google.maps.Marker({
-						position: selfPosition,
+						position: origin,
 						map: map,
 						draggable: true,
 						icon: START_MARKER
 					});
-					origin = selfPosition;
-					
 		            google.maps.event.addListener(marker, 'dragend', function (event) {
 						origin = event.latLng;
 						update_route();
