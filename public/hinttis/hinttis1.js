@@ -1,22 +1,17 @@
 // Constants
-var REST_PATH = '/rest';
-//var REST_PATH = 'http://localhost:8124/rest';
 var START_MARKER = 'https://chart.googleapis.com/chart?chst=d_map_pin_icon_withshadow&chld=beer|3366FF';
 
 // Variables
 var origin = null;
 var destinations = [];
 
+var distanceMatrix = null;
+var bestRoute = null;
+var map = null;
+
 var directionsService;
 var directionsRenderer;
 var distanceMatrixService;
-
-var matrix = null;
-var route = null;
-var route_points = [];
-var total_data = {};
-
-var map = null;
 
 /*
  * 
@@ -24,8 +19,7 @@ var map = null;
  */
  
 $('#page1').live("pagecreate", function() {
-    $('#map_canvas').gmap( { 'center': getLatLng(), 
-                             'zoom': 11, 
+    $('#map_canvas').gmap( { 'zoom': 11, 
                              'mapTypeControl': false,
                              'keyboardShortcuts': false,
                              'panControl': false,
@@ -36,20 +30,17 @@ $('#page1').live("pagecreate", function() {
         function (newMap) {
 			map = newMap;
 			navigator.geolocation.getCurrentPosition(function(position, status) {
-					origin = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-                    map.panTo(origin);
+					var markerPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+                    map.panTo(markerPosition);
 	                
 					// Add marker
-					var marker = new google.maps.Marker({
-						position: origin,
+					origin = new google.maps.Marker({
+						position: markerPosition,
 						map: map,
 						draggable: true,
 						icon: START_MARKER
 					});
-		            google.maps.event.addListener(marker, 'dragend', function (event) {
-						origin = event.latLng;
-						update_route();
-					});
+		            google.maps.event.addListener(origin, 'dragend', update_route);
 			});
             
             // Add event listener
@@ -61,34 +52,21 @@ $('#page1').live("pagecreate", function() {
 					draggable: true
 				});
 				
-				destinations.push(event.latLng);
+				destinations.push(marker);
 				
 				update_route();
 				
 				google.maps.event.addListener(marker, 'click', function (event) {
-					marker.setMap(null);
 					for (var i in destinations) {
-						if (destinations[i].equals(marker.getPosition())) {
+						if (destinations[i] === marker) {
 							destinations.splice(i,1);
 						}
 					}
+					marker.setMap(null);
 					update_route();
 				});
 				
-				var oldPosition = null;
-				google.maps.event.addListener(marker, 'dragstart', function (event) {
-					oldPosition = marker.getPosition();
-				});
-				
-	            google.maps.event.addListener(marker, 'dragend', function (event) {
-					for (var i in destinations) {
-						if (destinations[i].equals(oldPosition)) {
-							console.log("moi");
-							destinations[i] = event.latLng;
-						}
-					}
-					update_route();
-				});
+	            google.maps.event.addListener(marker, 'dragend', update_route);
             });
 			
             directionsRenderer = new google.maps.DirectionsRenderer();
@@ -110,31 +88,33 @@ function update_route() {
 		return;
 	}
 	
-	getBestRoute(origin, destinations, function(bestRoute) {
-        // Sort requests
-        var sorted_destinations = [];
-        for (i in bestRoute) {
-            sorted_destinations.push(destinations[bestRoute[i]]);
-        }
-        destinations = sorted_destinations;
-		
-		var waypoints = []
-	    var destination = destinations[destinations.length-1];
-	    for (var i = 0; i < destinations.length-1; i++) {
-	        waypoints.push({location: destinations[i]});
-	    }
+	var originLatLng = origin.getPosition();
+	var destinationLatLngs = [];
+	for (var i in destinations) {
+		destinationLatLngs.push(destinations[i].getPosition());
+	}
 	
+	getDistanceMatrix(originLatLng, destinationLatLngs, function(matrix) {
+		distanceMatrix = matrix;
+		bestRoute = getBestRoute(matrix);
+		
+		// Create waypoints
+		var waypoints = []
+	    var destination = destinationLatLngs[bestRoute[bestRoute.length-1]];
+	    for (var i = 0; i < bestRoute.length-1; i++) {
+	        waypoints.push({location: destinationLatLngs[bestRoute[i]]});
+	    }
+		
+	    // Show directions
 	    var directions_request = {
-	        origin: origin,
+	        origin: originLatLng,
 	        destination: destination,
 	        waypoints: waypoints,
 	        provideRouteAlternatives: false,
 	        unitSystem: google.maps.UnitSystem.METRIC,
 	        travelMode: google.maps.TravelMode.DRIVING
 	    };
-                    
-	    // Show directions
-	    directionsService.route(directions_request, function(result, status) {
+        directionsService.route(directions_request, function(result, status) {
 	        if (status == google.maps.DirectionsStatus.OK) {
 	            directionsRenderer.setDirections(result);
 				directionsRenderer.setMap(map);
@@ -145,70 +125,54 @@ function update_route() {
 	});
 }
 
-
 /*
  * 
  * Page 2 (Route data)
  */
 $('#page2').live("pageshow", function() {
-    if (!origin || !destinations.length) {
+    if (!distanceMatrix) {
         $.mobile.changePage($('#page1'), {reverse: true});
         return;
     }
-    
-    // Get distances
-    var distances = [];
-    var prev = -1;
-    var cumulative_distance = 0;
-    for (var current in destinations) {
-        cumulative_distance += matrix.rows[prev+1].elements[current].distance.value;
-        distances.push(cumulative_distance);
-    }
-    
 	
+	// Get distances
+    var distances = getDistances(distanceMatrix, bestRoute);
+    
+	// Get persons
 	var persons = []
-	for (i in destinations) {
+	for (i in bestRoute) {
 		persons[i] = 1;
 	}
+	
+	// Get costs
     costs = calculate_costs(distances, persons);
-    
-    var route_points = [];
-    var total_distance = 0;
-    var total_cost = 0;
-    for (i in destinations) {
-        route_points[i] = {
-            distance: distances[i],
-            cost: costs[i]
-        };
-        total_distance = distances[i];
-        total_cost += costs[i];
-    }
-    total_data.distance = total_distance;
-    total_data.cost = total_cost;
-    
-    var persons = route_points.length;
+	
+    // Populate table
     var table = $('#route_summary_table');
     table.empty();
-    var buddy;
-    var buddy_counter = 1;
-    for (var i in route_points ) {
-        buddy = "Buddy " + buddy_counter;
-      	buddy_counter += 1;
-		var route_point = route_points[i];
-        var km = route_point.distance / 1000;
-        var cost = Math.round(route_point.cost*100)/100;
-        var address = "jokupaikka";
-                
-        table.append('<tr><td><strong>' + buddy + '</strong> (' + km + ' km)</td><td style="float:right;"><strong>' + 
+	
+    var stop_counter = 1;
+	var totalCost = 0;
+	var totalDistance = 0;
+    for (var i in bestRoute ) {
+        var stop = "Stop " + stop_counter;
+      	stop_counter += 1;
+		
+        var km = distances[i] / 1000;
+        var cost = Math.round(costs[i]*100)/100;
+        var address = distanceMatrix.destinationAddresses[bestRoute[i]];
+		
+		totalCost += cost;
+		totalDistance = km;
+        
+        table.append('<tr><td><strong>' + stop + '</strong> (' + km + ' km)</td><td style="float:right;"><strong>' + 
                                                 cost + ' €</strong></td></tr>');
         table.append('<tr><td colspan="2">' + address + '</td></tr>');
         table.append('<tr><td colspan="2"><hr /></td></tr>');
     }
             
-    var total_km = total_data.distance / 1000;
-    var total_cost = Math.round(total_data.cost*100)/100;
-    table.append('<tr><td><strong>TOTAL</strong> ('+ total_km +' km)</td>'+
-                 '<td style="float:right;"><strong>' + total_cost + ' €</strong></td></tr>');
+    table.append('<tr><td><strong>TOTAL</strong> ('+ totalDistance +' km)</td>'+
+                 '<td style="float:right;"><strong>' + totalCost + ' €</strong></td></tr>');
     table.append('<tr><td></td><td></td></tr>');
 });
 
@@ -217,54 +181,7 @@ $('#page2').live("pageshow", function() {
  * 
  * Helpers
  */
-        
-function getLatLng() {
-    if ( google.loader.ClientLocation !== null ) {
-        return new google.maps.LatLng(google.loader.ClientLocation.latitude, google.loader.ClientLocation.longitude);    
-    }
-    return new google.maps.LatLng(60.195132,24.933472);
-}
-
-function buildLatLng(position) {
-    return new google.maps.LatLng(position[1], position[0]);
-}
-        
-function latLng_to_string(latlng, callback) {
-    if (!latlng) {
-        callback("Unkown");
-        return;
-    }
-            
-    var geocoder = new google.maps.Geocoder();
-    geocoder.geocode({'latLng': latlng}, function(results, status) {
-        if (status == google.maps.GeocoderStatus.OK) {
-            if (results[0]) {
-                var components = results[0].address_components;
-                var hood = "";
-                var postal_code = "";
-                var city = "";
-                for (var i in components) {
-                    switch(components[i].types[0]) {
-                    case 'postal_code':
-                        postal_code = components[i].long_name;
-                        hood = postalCodeMapping[postal_code];
-                        break;
-                    case 'administrative_area_level_3':
-                        city = components[i].long_name;
-                        break;
-                    }
-                }
-                        
-                var string =  postal_code + " " + hood + ", " + city;
-                callback(string);
-            }
-        } else {
-            console.log("Geocoder failed due to: " + status);
-        }
-    });
-}
-
-function getBestRoute(origin, destinations, callback) {
+function getDistanceMatrix(origin, destinations, callback) {
     var origins = [origin];
     for (var i in destinations) {
         origins.push(destinations[i]);
@@ -275,71 +192,67 @@ function getBestRoute(origin, destinations, callback) {
         destinations: destinations,
         travelMode: google.maps.TravelMode.DRIVING,
         unitSystem: google.maps.UnitSystem.METRIC
-    }, function(resultMatrix, status) {
+    }, function(matrix, status) {
         if (status != google.maps.DistanceMatrixStatus.OK) {
             console.log(status);
         }
 		
-		matrix = resultMatrix;
-        
-        var stop_count = destinations.length;
-        var stops = [];
-        for (var i = 0 ; i < stop_count ; i++) {
-            stops.push(i);
-        }
-
-        var best_drive = [];
-        var best_cost = null;
-        function recurse(drive, stops) {
-            // Permutationing
-            if (stops.length) {
-                for (var i = 0 ; i < stops.length ;  i++) {
-                    var own_drive = drive.slice();
-                    own_drive.push(stops[i]);
-                    recurse(own_drive, stops.slice(0,i).concat(stops.slice(i+1)));
-                }
-            } else {
-                // Get cost
-                var cost = 0;
-                var prev = -1;
-                for (var d in drive) {
-                    var element = matrix.rows[prev+1].elements[drive[d]];
-                    cost += element.distance.value;
-                    prev = drive[d];
-                }
-                if (!best_cost || cost < best_cost) {
-                    best_drive = drive;
-                    best_cost = cost;
-                }
-            }
-        }
-
-        recurse([], stops);
-		callback(best_drive, best_cost);
+		callback(matrix)
 	});
 }
 
-function getDistance(point1, point2) {
-    var lat1 = point1[1];
-    var lon1 = point1[0];
-    var lat2 = point2[1];
-    var lon2 = point2[0];
-    var R = 6371; // Radius of the earth in km
-    var dLat = (lat2-lat1).toRad();  // Javascript functions in radians
-    var dLon = (lon2-lon1).toRad(); 
-    var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(lat1.toRad()) * Math.cos(lat2.toRad()) * 
-            Math.sin(dLon/2) * Math.sin(dLon/2); 
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-    return R * c; // Distance in km
+function getBestRoute(matrix) {
+    var stop_count = destinations.length;
+    var stops = [];
+    for (var i = 0 ; i < stop_count ; i++) {
+        stops.push(i);
+    }
+
+    var best_drive = [];
+    var best_cost = null;
+    function recurse(drive, stops) {
+        // Permutationing
+        if (stops.length) {
+            for (var i = 0 ; i < stops.length ;  i++) {
+                var own_drive = drive.slice();
+                own_drive.push(stops[i]);
+                recurse(own_drive, stops.slice(0,i).concat(stops.slice(i+1)));
+            }
+        } else {
+            // Get cost
+            var cost = 0;
+            var prev = -1;
+            for (var d in drive) {
+                var element = matrix.rows[prev+1].elements[drive[d]];
+                cost += element.distance.value;
+                prev = drive[d];
+            }
+            if (!best_cost || cost < best_cost) {
+                best_drive = drive;
+                best_cost = cost;
+            }
+        }
+    }
+
+    recurse([], stops);
+	return best_drive;
 }
-        
-if (typeof(Number.prototype.toRad) === "undefined") {
-  Number.prototype.toRad = function() {
-    return this * Math.PI / 180;
-  };
+
+function getDistances(matrix, bestRoute) {
+	// Get distances
+    var distances = [];
+    var prev = 0;
+    var cumulative_distance = 0;
+    for (var i in bestRoute) {
+		var current = bestRoute[i];
+        cumulative_distance += distanceMatrix.rows[prev].elements[current].distance.value;
+        distances.push(cumulative_distance);
+		prev = current + 1;
+    }
+	
+	return distances;
 }
-        
+
 function calculate_costs(distances, persons) {
     var groups = distances.length;
     var total_persons = 0;
@@ -374,13 +287,7 @@ function calculate_costs(distances, persons) {
     return prices;
 }
         
-function calculate_cost(distance, persons) {
-    var starting_price = start_price(new Date());
-    var price_per_km = persons <= 2 ? 1.43 : 1.72;
-    return starting_price + price_per_km * distance / 1000;
-}
-        
-function start_price(date) {            
+function start_price(date) {
     var LO = 5.5;
     var HI = 8.6;
             
