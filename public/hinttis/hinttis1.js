@@ -1,5 +1,9 @@
 // Constants
-var START_MARKER = 'https://chart.googleapis.com/chart?chst=d_map_pin_icon_withshadow&chld=beer|3366FF';
+var START_MARKER = 'https://chart.googleapis.com/chart?chst=d_map_pin_icon&chld=beer|4477FF';
+var MARKER_SHADOW = new google.maps.MarkerImage('http://maps.gstatic.com/mapfiles/markers2/marker_sprite.png',
+												new google.maps.Size(28,35),	// Size
+												new google.maps.Point(28,0),	// Origin
+												new google.maps.Point(2,34));	// Anchor
 
 // Variables
 var origin = null;
@@ -38,7 +42,8 @@ $('#page1').live("pagecreate", function() {
 						position: markerPosition,
 						map: map,
 						draggable: true,
-						icon: START_MARKER
+						icon: START_MARKER,
+						shadow: MARKER_SHADOW
 					});
 		            google.maps.event.addListener(origin, 'dragend', update_route);
 			});
