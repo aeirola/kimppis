@@ -5,6 +5,10 @@ var common = {};
 *	Common business logic functions
 */
 
+/**
+* Gets the best route from the given distanec matrix. The best route is the shortest one.
+* Returns an array of indexes which is the sort-array of the order in the matrix
+*/
 common.getBestRoute = function(matrix) {
     var stop_count = destinations.length;
     var stops = [];
@@ -42,56 +46,73 @@ common.getBestRoute = function(matrix) {
 	return best_drive;
 }
 
+/**
+* Gets the distances of the given best route in the distance matrix.
+* Returns an array of distances (not the cumulative distance)
+*/
 common.getDistances = function(matrix, bestRoute) {
 	// Get distances
     var distances = [];
     var prev = 0;
-    var cumulative_distance = 0;
     for (var i in bestRoute) {
 		var current = bestRoute[i];
-        cumulative_distance += distanceMatrix.rows[prev].elements[current].distance.value;
-        distances.push(cumulative_distance);
+        var distance = distanceMatrix.rows[prev].elements[current].distance.value;
+        distances.push(distance);
 		prev = current + 1;
     }
 	
 	return distances;
 }
 
+/**
+* Calculates the costs of the number of persons given travelling the distances given.
+* Returns an array of costs
+*/
 common.getCosts = function(distances, persons) {
+	if (!persons) {
+		persons = []
+		for (var i in distance) {
+			persons.push(1)
+		}
+	}
+	
     var groups = distances.length;
     var total_persons = 0;
     var i;
     
-    for (i in persons) {
+    for (i in distances) {
         total_persons += persons[i];
     }
-            
+    
     var prices = [];
-            
+    
     // Starting price
-    var starting_price = start_price(new Date());
+    var starting_price = common.getStartPrice();
     for (i in persons) {
-        prices[i] = starting_price * persons[i] / total_persons;
+        prices[i] = (starting_price * persons[i]) / total_persons;
     }
             
     var price_per_km = persons <= 2 ? 1.43 : 1.72;
     price_per_km *= 1.10;
             
     var leg_persons = persons;
-    var previous_leg_distance = 0;
     for (i in distances) {
-        var leg_distance = distances[i] - previous_leg_distance;
-        var leg_cost = leg_distance * price_per_km/1000;
+        var leg_cost = distances[i] * price_per_km/1000;
         for (var j = i ; j < prices.length ; j++) {
-            prices[j] += leg_cost / total_persons;
+            prices[j] += leg_cost * persons[i] / total_persons;
         }
         leg_persons -= persons[i];
-        previous_leg_distance = distances[i];
     }
     return prices;
 }
 
+/**
+* Calculates the start price for the given day.
+*
+*/
 common.getStartPrice = function(date) {
+	date = date || new Date();
+	
     var LO = 5.5;
     var HI = 8.6;
             
@@ -101,8 +122,8 @@ common.getStartPrice = function(date) {
     var six_to_eight = hour >= 6 && hour < 20;
     var six_to_four = hour >= 6 && hour < 16; 
             
-    var holiday = holidays[dateString] || false;
-    var preholiday = preholidays[dateString] || false;
+    var holiday = common.holidays[dateString] || false;
+    var preholiday = common.eves[dateString] || false;
             
     if (holiday) {
         return HI;
@@ -124,6 +145,10 @@ common.getStartPrice = function(date) {
     }
 }
 
+common.round = function(value) {
+	return Math.round(value*100)/100;
+};
+
 /*
 *
 *	DATA
@@ -133,28 +158,25 @@ common.holidays = {
     "1.6":   1, // loppiainen (pe)
     "4.6":   1, // pitkäperjantai (pe)
     "4.9":   1, // toinen pääsiäispäivä (ma)
-    "5.1":   1, // vapunpäivä (ti)
+    "5.1":   1, // vapunpäivä
     "5.17":  1, // helatorstai (to)
     "6.23":  1, // juhannus (la)
     "11.3":  1, // pyhäinpäivä (la)
-    "12.6":  1, // itsenäisyyspäivä (to)
-    "12.24": 1, // jouluaatto (ma)
-    "12.25": 1, // joulupäivä (ti)
-    "12.26": 1  // tapaninpäivä (ke)
+    "12.6":  1, // itsenäisyyspäivä
+    "12.24": 1, // jouluaatto
+    "12.25": 1, // joulupäivä
+    "12.26": 1  // tapaninpäivä
 };
         
-common.preholidays = {
-    "1.6":   1, // loppiainen (pe)
-    "4.6":   1, // pitkäperjantai (pe)
-    "4.9":   1, // toinen pääsiäispäivä (ma)
-    "5.1":   1, // vapunpäivä (ti)
-    "5.17":  1, // helatorstai (to)
-    "6.23":  1, // juhannus (la)
-    "11.3":  1, // pyhäinpäivä (la)
-    "12.6":  1, // itsenäisyyspäivä (to)
-    "12.24": 1, // jouluaatto (ma)
-    "12.25": 1, // joulupäivä (ti)
-    "12.26": 1  // tapaninpäivä (ke)
+common.eves = {
+    "1.5":   1, // loppiaisen aatto (to)
+    "4.5":   1, // pitkäperjantain aatto (to)
+    "4.30":  1, // vappuaatto
+    "5.16":  1, // helatorstain aatto (ke)
+    "6.22":  1, // juhannusaatto (pe)
+    "11.2":  1, // pyhäinpäivän aatto (pe)
+    "12.5":  1, // itsenäisyyspäivän aatto
+    "12.31": 1  // uudenvuoden aatto
 };
         
 common.postalCodeMapping = {

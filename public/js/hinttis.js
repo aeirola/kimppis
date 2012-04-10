@@ -45,7 +45,7 @@ $('#page1').live("pagecreate", function() {
 						icon: START_MARKER,
 						shadow: MARKER_SHADOW
 					});
-		            google.maps.event.addListener(origin, 'dragend', update_route);
+		            google.maps.event.addListener(origin, 'dragend', hinttis.updateRoute);
 			});
             
             // Add event listener
@@ -57,21 +57,21 @@ $('#page1').live("pagecreate", function() {
 					draggable: true
 				});
 				
-				destinations.push(marker);
+				destinations.push({persons: 1, marker: marker});
 				
-				update_route();
+				hinttis.updateRoute();
 				
 				google.maps.event.addListener(marker, 'click', function (event) {
 					for (var i in destinations) {
-						if (destinations[i] === marker) {
+						if (destinations[i].marker === marker) {
 							destinations.splice(i,1);
 						}
 					}
 					marker.setMap(null);
-					update_route();
+					hinttis.updateRoute();
 				});
 				
-	            google.maps.event.addListener(marker, 'dragend', update_route);
+	            google.maps.event.addListener(marker, 'dragend', hinttis.updateRoute);
             });
 			
             directionsRenderer = new google.maps.DirectionsRenderer();
@@ -96,45 +96,7 @@ $('#page2').live("pageshow", function() {
         return;
     }
 	
-	// Get distances
-    var distances = getDistances(distanceMatrix, bestRoute);
-    
-	// Get persons
-	var persons = []
-	for (i in bestRoute) {
-		persons[i] = 1;
-	}
-	
-	// Get costs
-    costs = calculate_costs(distances, persons);
-	
-    // Populate table
-    var table = $('#route_summary_table');
-    table.empty();
-	
-    var stop_counter = 1;
-	var totalCost = 0;
-	var totalDistance = 0;
-    for (var i in bestRoute ) {
-        var stop = "Stop " + stop_counter;
-      	stop_counter += 1;
-		
-        var km = distances[i] / 1000;
-        var cost = Math.round(costs[i]*100)/100;
-        var address = distanceMatrix.destinationAddresses[bestRoute[i]];
-		
-		totalCost += cost;
-		totalDistance = km;
-        
-        table.append('<tr><td><strong>' + stop + '</strong> (' + km + ' km)</td><td style="float:right;"><strong>' + 
-                                                cost + ' €</strong></td></tr>');
-        table.append('<tr><td colspan="2">' + address + '</td></tr>');
-        table.append('<tr><td colspan="2"><hr /></td></tr>');
-    }
-            
-    table.append('<tr><td><strong>TOTAL</strong> ('+ totalDistance +' km)</td>'+
-                 '<td style="float:right;"><strong>' + totalCost + ' €</strong></td></tr>');
-    table.append('<tr><td></td><td></td></tr>');
+	hinttis.updateCosts();
 });
 
 /*
@@ -143,26 +105,6 @@ $('#page2').live("pageshow", function() {
 */
 
 var hinttis = {};
-
-hinttis.getDistanceMatrix = function(origin, destinations, callback) {
-    var origins = [origin];
-    for (var i in destinations) {
-        origins.push(destinations[i]);
-    }
-	
-    distanceMatrixService.getDistanceMatrix({
-        origins: origins,
-        destinations: destinations,
-        travelMode: google.maps.TravelMode.DRIVING,
-        unitSystem: google.maps.UnitSystem.METRIC
-    }, function(matrix, status) {
-        if (status != google.maps.DistanceMatrixStatus.OK) {
-            console.log(status);
-        }
-		
-		callback(matrix)
-	});
-}
 
 hinttis.updateRoute = function() {
 	if (!destinations.length) {
@@ -173,12 +115,12 @@ hinttis.updateRoute = function() {
 	var originLatLng = origin.getPosition();
 	var destinationLatLngs = [];
 	for (var i in destinations) {
-		destinationLatLngs.push(destinations[i].getPosition());
+		destinationLatLngs.push(destinations[i].marker.getPosition());
 	}
 	
-	getDistanceMatrix(originLatLng, destinationLatLngs, function(matrix) {
+	hinttis.getDistanceMatrix(originLatLng, destinationLatLngs, function(matrix) {
 		distanceMatrix = matrix;
-		bestRoute = getBestRoute(matrix);
+		bestRoute = common.getBestRoute(matrix);
 		
 		// Create waypoints
 		var waypoints = []
@@ -205,5 +147,99 @@ hinttis.updateRoute = function() {
 	        }
 	    });
 	});
+};
+
+hinttis.getDistanceMatrix = function(origin, destinations, callback) {
+    var origins = [origin];
+    for (var i in destinations) {
+        origins.push(destinations[i]);
+    }
+	
+    distanceMatrixService.getDistanceMatrix({
+        origins: origins,
+        destinations: destinations,
+        travelMode: google.maps.TravelMode.DRIVING,
+        unitSystem: google.maps.UnitSystem.METRIC
+    }, function(matrix, status) {
+        if (status != google.maps.DistanceMatrixStatus.OK) {
+            console.log(status);
+        }
+		
+		callback(matrix)
+	});
+};
+
+hinttis.updateCosts = function() {
+	// Get distances
+    var distances = common.getDistances(distanceMatrix, bestRoute);
+    
+	// Get persons
+	var persons = []
+	for (i in destinations) {
+		persons[i] = destinations[i].persons;
+	}
+	
+	// Get costs
+    var costs = common.getCosts(distances, persons);
+	
+    hinttis.updateTable(distances, costs);
+	
 }
 
+hinttis.updateTable = function(distances, costs) {
+    // Populate table
+    var table = $('#route_summary_table');
+    table.empty();
+	
+    var stop_counter = 1;
+	var totalCost = 0;
+	var totalDistance = 0;
+    for (var i in bestRoute ) {
+        var stop = "Stop " + (i+1);
+		var stopIndex = bestRoute[i];
+		
+        var km = common.round(distances[i] / 1000);
+		totalDistance += km;
+        var cost = common.round(costs[i]);
+        var address = distanceMatrix.destinationAddresses[bestRoute[i]];
+		
+		totalCost += cost;
+		
+		var stopTag = $('<strong/>', {text:stop});
+		var kmTag = $('<span/>', {text: '(' + km + ' km)'});
+		var costTag = $('<strong/>', {text: cost + ' €'});
+		var personsTag = $('<span/>');
+		for (var person = 1; person <= 4 ; person++) {
+			var html = (person <= hinttis.getPersons(stopIndex)) ? '#' : 'O';
+			var personTag = $('<a/>', {
+				text: html,
+				'href': '#',
+				'data-index': stopIndex,
+				'data-persons': person,
+				click: function(){
+					hinttis.setPersons($(this).attr('data-index'), $(this).attr('data-persons'));
+					hinttis.updateCosts();
+				}
+			});
+			personsTag.append(personTag);
+		}
+		
+		table.append($('<tr/>').append($('<td/>').append(stopTag, kmTag, personsTag), $('<td/>', {'style': 'float:right;'}).append(costTag)));
+		table.append($('<tr/>').append($('<td/>', {text: address})));
+    }
+	
+    totalDistance = common.round(totalDistance);
+    totalCost = common.round(totalCost);
+	        
+    table.append('<tr><td colspan="2"><hr /></td></tr>');
+    table.append('<tr><td><strong>TOTAL</strong> ('+ totalDistance +' km)</td>'+
+                 '<td style="float:right;"><strong>' + totalCost + ' €</strong></td></tr>');
+}
+
+hinttis.setPersons = function(stopIndex, amount) {
+	destinations[stopIndex].persons = parseInt(amount);
+};
+
+hinttis.getPersons = function(stopIndex) {
+	return destinations[stopIndex].persons;
+}
