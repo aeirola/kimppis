@@ -10,7 +10,7 @@ var common = {};
 * Returns an array of indexes which is the sort-array of the order in the matrix
 */
 common.getBestRoute = function(matrix) {
-    var stop_count = destinations.length;
+    var stop_count = matrix.destinationAddresses.length;
     var stops = [];
     for (var i = 0 ; i < stop_count ; i++) {
         stops.push(i);
@@ -56,7 +56,7 @@ common.getDistances = function(matrix, bestRoute) {
     var prev = 0;
     for (var i in bestRoute) {
 		var current = bestRoute[i];
-        var distance = distanceMatrix.rows[prev].elements[current].distance.value;
+        var distance = matrix.rows[prev].elements[current].distance.value;
         distances.push(distance);
 		prev = current + 1;
     }
@@ -71,7 +71,7 @@ common.getDistances = function(matrix, bestRoute) {
 common.getCosts = function(distances, persons) {
 	if (!persons) {
 		persons = []
-		for (var i in distance) {
+		for (var i in distances) {
 			persons.push(1)
 		}
 	}

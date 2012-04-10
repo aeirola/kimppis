@@ -1,6 +1,6 @@
 // Constants
 var REST_PATH = '/rest';
-//var REST_PATH = 'http://localhost:8124/rest';
+var REST_PATH = 'http://localhost:8124/rest';
 
 // Variables
 var settings_persons = 1;
@@ -40,7 +40,7 @@ $('#page1').live("pagehide", function() {
 });
 
 $('#page1').live("pagecreate", function() {
-    $('#map_canvas').gmap( { center: getLatLng(), 
+    $('#map_canvas').gmap( { center: kimppis.getLatLng(), 
                              zoom: 11, 
                              mapTypeControl: false,
                              keyboardShortcuts: false,
@@ -56,7 +56,7 @@ $('#page1').live("pagecreate", function() {
                     function( position ) { 
                         // Get position
                         position_latLng = new google.maps.LatLng(position.coords.latitude, 
-                                                                     position.coords.longitude);
+                                                                 position.coords.longitude);
                                 
                         // Set position
                         $('#map_canvas').gmap('clear', 'markers');
@@ -109,7 +109,7 @@ $('#page3').live("pageshow", function() {
     }
             
     // Update form / to
-    latLng_to_string(destination_latLng, function(to_address) {
+    kimppis.latLngToString(destination_latLng, function(to_address) {
         $('#to_address').html(to_address);
                 
         if (!settings_finder) {
@@ -219,10 +219,10 @@ function handle_route(route_data) {
     }
             
     // Build destination matrix request
-    var origins = [buildLatLng(stand.position)];
+    var origins = [kimppis.buildLatLng(stand.position)];
     var destinations = [];
     for (var i in requests) {
-        var latlng = buildLatLng(requests[i].destination);
+        var latlng = kimppis.buildLatLng(requests[i].destination);
         origins.push(latlng);
         destinations.push(latlng);
     }
@@ -236,41 +236,9 @@ function handle_route(route_data) {
         if (status != google.maps.DistanceMatrixStatus.OK) {
             console.log(status);
         }
-                
-        var stop_count = destinations.length;
-        var stops = [];
-        for (var i = 0 ; i < stop_count ; i++) {
-            stops.push(i);
-        }
-                
-        var best_drive = [];
-        var best_cost = null;
-        function recurse(drive, stops) {
-            // Permutationing
-            if (stops.length) {
-                for (var i = 0 ; i < stops.length ;  i++) {
-                    var own_drive = drive.slice();
-                    own_drive.push(stops[i]);
-                    recurse(own_drive, stops.slice(0,i).concat(stops.slice(i+1)));
-                }
-            } else {
-                // Get cost
-                var cost = 0;
-                var prev = -1;
-                for (var d in drive) {
-                    var element = matrix.rows[prev+1].elements[drive[d]];
-                    cost += element.distance.value;
-                    prev = drive[d];
-                }
-                if (!best_cost || cost < best_cost) {
-                    best_drive = drive;
-                    best_cost = cost;
-                }
-            }
-        }
-
-        recurse([], stops);
-                
+		
+		best_drive = common.getBestRoute(matrix);
+		
         // Sort requests
         var sorted_requests = [];
         for (i in best_drive) {
@@ -279,14 +247,8 @@ function handle_route(route_data) {
         requests = sorted_requests;
                 
         // Get distances
-        var distances = [];
-        var prev = -1;
-        var cumulative_distance = 0;
-        for (var current in best_drive) {
-            cumulative_distance += matrix.rows[prev+1].elements[current].distance.value;
-            distances.push(cumulative_distance);
-        }
-                
+		distances = common.getDistances(matrix, best_drive);
+        
         // Get own id
         for (var r in requests) {
             if (request._id === requests[r]._id) {
@@ -294,8 +256,8 @@ function handle_route(route_data) {
                 break;
             }
         }
-                
-        costs = calculate_costs(distances, requests);
+        
+        costs = common.getCosts(distances);
                 
         route_points = [];
         var total_distance = 0;
@@ -313,7 +275,7 @@ function handle_route(route_data) {
         total_data.cost = total_cost;
                 
         kimppis_cost = costs[own_index];
-        normal_cost = calculate_cost(matrix.rows[0].elements[own_index].distance.value, request.persons);
+        normal_cost = common.getCosts([matrix.rows[0].elements[own_index].distance.value], [request.persons]);
         difference = normal_cost - kimppis_cost;
                         
         // Update values
@@ -336,7 +298,7 @@ function show_cost(address) {
     directionsService.route(directions_request, function(result, status) {
         if (status === google.maps.DirectionsStatus.OK) {
             var distance = result.routes[0].legs[0].distance.value;
-            var cost = calculate_cost(distance, settings_persons);
+            var cost = common.getCosts([distance], [settings_persons]);
             
             route_points = [{
                 distance: distance,
@@ -434,11 +396,11 @@ $('#page7').live("pageshow", function() {
         return;
     }
     
-    drawRoute();
+    kimppis.drawRoute();
 });
         
 $('#page7').live("pagecreate", function() {
-    $('#route_map_canvas').gmap( { center: getLatLng(), 
+    $('#route_map_canvas').gmap( { center: kimppis.getLatLng(), 
                                  zoom: 11, 
                                  mapTypeControl: false,
                                  keyboardShortcuts: false,
@@ -466,10 +428,10 @@ kimppis.drawRoute = function() {
     var waypoints = [];
     
     if (settings_finder) {
-        origin = buildLatLng(route.stand.position);
-        destination = buildLatLng(route_points[route_points.length-1].request.destination);
+        origin = kimppis.buildLatLng(route.stand.position);
+        destination = kimppis.buildLatLng(route_points[route_points.length-1].request.destination);
         for (var i = 0; i < route_points.length-1; i++) {
-            waypoints.push({location: buildLatLng(route_points[i].request.destination)});
+            waypoints.push({location: kimppis.buildLatLng(route_points[i].request.destination)});
         }
     } else {
         origin = route_points[0].request.origin;
@@ -528,7 +490,7 @@ kimppis.latLngToString = function(latlng, callback) {
                     switch(components[i].types[0]) {
                     case 'postal_code':
                         postal_code = components[i].long_name;
-                        hood = postalCodeMapping[postal_code];
+                        hood = common.postalCodeMapping[postal_code];
                         break;
                     case 'administrative_area_level_3':
                         city = components[i].long_name;
