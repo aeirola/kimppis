@@ -1,9 +1,12 @@
-Unnecessary updates to gmaps:
-When polling for updates to route, the client also does a Gmap update even though the route hasn't changed.
+Kimppis:
+ - Unnecessary updates to gmaps: When polling for updates to route, the client also does a Gmap update even though the route hasn't changed.
 
 Hinttis:
-Sister tool for calculateing taxi fares of routes.
-	- NO DB
-	- No Ajax
-	- N-points, count fares and split.
-
+ - Split into multiple taxis
+ - Change number of persons
+ - Show money saved vs. lone taksi
+ - Show estimated taxi fare at stops
+ 
+Common:
+ - Holidays for every year
+ - Fix km-cost function
