@@ -1,6 +1,6 @@
 // Constants
 var REST_PATH = '/rest';
-var REST_PATH = 'http://localhost:8124/rest';
+//var REST_PATH = 'http://localhost:8124/rest';
 
 // Variables
 var settings_persons = 1;
