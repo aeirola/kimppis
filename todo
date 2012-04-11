@@ -6,7 +6,8 @@ Hinttis:
  - Change number of persons
  - Show money saved vs. lone taksi
  - Show estimated taxi fare at stops
- - Somehow enter the starting fare time
+ - Somehow enter the starting fare time, jQuery timeslector?
+ - Handle missing location
  
 Common:
  - Holidays for every year

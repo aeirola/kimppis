@@ -208,11 +208,14 @@ hinttis.updateTable = function(distances, costs) {
 		var stopTag = $('<strong/>', {text:stop});
 		var kmTag = $('<span/>', {text: '(' + km + ' km)'});
 		var costTag = $('<strong/>', {text: cost + ' €'});
-		var personsTag = $('<span/>');
+		var personsTag = $('<span/>', {'class': 'persons'});
 		for (var person = 1; person <= 4 ; person++) {
-			var html = (person <= hinttis.getPersons(stopIndex)) ? '#' : 'O';
+			if (person <= hinttis.getPersons(stopIndex)) {
+				var image = $('<img/>', {'src': 'img/selected.png', 'alt': 'selected', 'class': 'person'});
+			} else {
+				var image = $('<img/>', {'src': 'img/unselected.png', 'alt': 'unselected', 'class': 'person'});
+			}
 			var personTag = $('<a/>', {
-				text: html,
 				'href': '#',
 				'data-index': stopIndex,
 				'data-persons': person,
@@ -220,7 +223,7 @@ hinttis.updateTable = function(distances, costs) {
 					hinttis.setPersons($(this).attr('data-index'), $(this).attr('data-persons'));
 					hinttis.updateCosts();
 				}
-			});
+			}).append(image);
 			personsTag.append(personTag);
 		}
 		
