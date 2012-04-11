@@ -115,35 +115,22 @@ common.getCosts = function(distances, persons) {
 common.getStartPrice = function(date) {
 	date = date || new Date();
 	
-    var LO = 5.5;
-    var HI = 8.6;
+    var NORMAL_PRICE = 5.5;
+    var HIGH_PRICE = 8.6;
             
     var hour = date.getHours();
-    var dateString = date.getMonth() + "." + date.getDay();
-            
-    var six_to_eight = hour >= 6 && hour < 20;
-    var six_to_four = hour >= 6 && hour < 16; 
-            
-    var holiday = common.holidays[dateString] || false;
-    var preholiday = common.eves[dateString] || false;
+	var day = date.getDay();
+    var dateString = date.getMonth() + "." + day;
+    
+    var holiday = common.holidays[dateString] || (day === 0);
+    var eve = common.eves[dateString] || (day === 6);
             
     if (holiday) {
         return HI;
-    } else if (preholiday) {
-        return six_to_four ? LO : HI;
+    } else if (eve) {
+        return (hour >= 6 && hour < 16) ? NORMAL_PRICE : HIGH_PRICE;
     } else {
-        switch(date.getDay()) {
-            case 0:    // Sunday
-                return HI;
-            case 1:    // Monday
-            case 2:
-            case 3:
-            case 4:
-            case 5:
-                return six_to_eight ? LO : HI;
-            case 6:
-                return six_to_four ? LO : HI;
-        }
+        return (hour >= 6 && hour < 20) ? NORMAL_PRICE : HIGH_PRICE;
     }
 }
 

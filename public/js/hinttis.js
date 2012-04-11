@@ -23,7 +23,8 @@ var distanceMatrixService;
  */
  
 $('#page1').live("pagecreate", function() {
-    $('#map_canvas').gmap( { 'zoom': 11, 
+    $('#map_canvas').gmap( { 'center': common.getLatLng(),
+							 'zoom': 11, 
                              'mapTypeControl': false,
                              'keyboardShortcuts': false,
                              'panControl': false,
