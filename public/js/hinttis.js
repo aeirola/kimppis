@@ -223,7 +223,11 @@ hinttis.updateTable = function(distances, costs) {
 		var titleTag = $('<strong/>', {text:stop, 'class': 'title'});
 		var kmTag = $('<span/>', {text: km , 'class': 'km'});
 		var costTag = $('<strong/>', {text: cost, 'class': 'cost'});
-		var costPerTag = $('<strong/>', {text: costPer, 'class': 'cost_per'});
+		if (persons > 1) {
+			var costPerTag = $('<strong/>', {text: costPer, 'class': 'cost_per'});
+		} else {
+			var costPerTag = null;
+		}
 		var personsTag = $('<span/>', {'class': 'persons'});
 		for (var person = 1; person <= 4 ; person++) {
 			if (person <= persons) {
@@ -243,8 +247,8 @@ hinttis.updateTable = function(distances, costs) {
 			personsTag.append(personTag);
 		}
 		
-		table.append($('<tr/>').append($('<td/>').append(titleTag, kmTag, personsTag), $('<td/>', {'class': 'cost'}).append(costTag, costPerTag)));
-		table.append($('<tr/>').append($('<td/>', {text: address})));
+		table.append($('<tr/>').append($('<td/>').append(titleTag, kmTag, personsTag), $('<td/>', {'class': 'cost'}).append(costTag)));
+		table.append($('<tr/>').append($('<td/>', {text: address, 'class': 'address'}), $('<td/>', {'class': 'cost_per'}).append(costPerTag)));
     }
 	
     // Separator
