@@ -3,7 +3,6 @@ Kimppis:
 
 Hinttis:
  - Split into multiple taxis
- - Change number of persons
  - Show money saved vs. lone taksi
  - Show estimated taxi fare at stops
  - Somehow enter the starting fare time, jQuery timeslector?

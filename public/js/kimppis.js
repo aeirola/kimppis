@@ -40,7 +40,7 @@ $('#page1').live("pagehide", function() {
 });
 
 $('#page1').live("pagecreate", function() {
-    $('#map_canvas').gmap( { center: kimppis.getLatLng(), 
+    $('#map_canvas').gmap( { center: common.getLatLng(), 
                              zoom: 11, 
                              mapTypeControl: false,
                              keyboardShortcuts: false,
@@ -461,13 +461,6 @@ kimppis.drawRoute = function() {
 *
 *	Kimppis-specific code
 */
-kimppis.getLatLng = function() {
-    if ( google.loader.ClientLocation !== null ) {
-        return new google.maps.LatLng(google.loader.ClientLocation.latitude, google.loader.ClientLocation.longitude);    
-    }
-    return new google.maps.LatLng(60.195132,24.933472);
-}
-        
 kimppis.buildLatLng = function(position) {
     return new google.maps.LatLng(position[1], position[0]);
 }

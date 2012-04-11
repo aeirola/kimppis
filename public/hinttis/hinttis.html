@@ -18,11 +18,30 @@
 			vertical-align: top;	
 		}
 		
-		span.persons {
-			margin: 0 0 0 5px;
+		#route_summary_table td.cost {
+			float:right;
 		}
 		
-		img.person {
+		#route_summary_table span.title, 
+		#route_summary_table span.km,
+		#route_summary_table span.persons {
+			padding: 0;
+			margin: 0 5px 0 5px;
+		}
+		
+		#route_summary_table span.km:before {
+			content: "(";
+		}
+		
+		#route_summary_table span.km:after {
+			content: " km)";
+		}
+		
+		#route_summary_table strong.cost:after {
+			content: " €";
+		}
+		
+		#route_summary_table span.persons img.person {
 			vertical-align: bottom;
 			padding: 0;
 			margin: 0 0 0 1px;

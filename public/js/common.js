@@ -69,6 +69,7 @@ common.getDistances = function(matrix, bestRoute) {
 * Returns an array of costs
 */
 common.getCosts = function(distances, persons) {
+	// Default persons to 1
 	if (!persons) {
 		persons = []
 		for (var i in distances) {
@@ -76,11 +77,9 @@ common.getCosts = function(distances, persons) {
 		}
 	}
 	
-    var groups = distances.length;
+	// Total number of persons in beginning of trip
     var total_persons = 0;
-    var i;
-    
-    for (i in distances) {
+    for (var i in persons) {
         total_persons += persons[i];
     }
     
@@ -88,20 +87,23 @@ common.getCosts = function(distances, persons) {
     
     // Starting price
     var starting_price = common.getStartPrice();
-    for (i in persons) {
+    for (var i in persons) {
         prices[i] = (starting_price * persons[i]) / total_persons;
     }
-            
-    var price_per_km = persons <= 2 ? 1.43 : 1.72;
-    price_per_km *= 1.10;
-            
-    var leg_persons = persons;
-    for (i in distances) {
-        var leg_cost = distances[i] * price_per_km/1000;
-        for (var j = i ; j < prices.length ; j++) {
-            prices[j] += leg_cost * persons[i] / total_persons;
+    
+	// KM prices       
+    for (var i in distances) {
+		// Calculate leg cost
+		var pricePerKm = common.getKmPrice(total_persons) * 1.1;
+		var leg_cost = (distances[i] * pricePerKm)/1000;
+        
+		// Divide according to number of persons per leg
+		for (var j = i ; j < prices.length ; j++) {
+            prices[j] += (leg_cost * persons[j]) / total_persons;
         }
-        leg_persons -= persons[i];
+		
+		// Remove leaving persons
+        total_persons -= persons[i];
     }
     return prices;
 }
@@ -145,9 +147,40 @@ common.getStartPrice = function(date) {
     }
 }
 
+common.getKmPrice = function(persons) {
+	switch (persons) {
+	case 0:
+	case 1:
+	case 2:
+		return 1.43;
+	case 3:
+	case 4:
+		return 1.72;
+	case 5:
+	case 6:
+		return 1.86;
+	default:
+		return 2.01;
+	}
+}
+
+/**
+* Rounds the given value to 2 decimals
+*/
 common.round = function(value) {
 	return Math.round(value*100)/100;
 };
+
+/**
+* Returns a close latLng
+*/
+common.getLatLng = function() {
+    if ( google.loader.ClientLocation !== null ) {
+        return new google.maps.LatLng(google.loader.ClientLocation.latitude, google.loader.ClientLocation.longitude);    
+    }
+    return new google.maps.LatLng(60.195132,24.933472);
+}
+
 
 /*
 *
