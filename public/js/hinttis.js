@@ -210,10 +210,12 @@ hinttis.updateTable = function(distances, costs) {
     for (var i in bestRoute ) {
         var stop = "Stop " + (parseInt(i)+1);
 		var stopIndex = bestRoute[i];
+		var persons = parseInt(hinttis.getPersons(stopIndex));
 		
         var km = common.round(distances[i] / 1000);
 		totalDistance += km;
         var cost = common.round(costs[i]);
+		var costPer = common.round(costs[i] / persons);
         var address = distanceMatrix.destinationAddresses[bestRoute[i]];
 		
 		totalCost += cost;
@@ -221,9 +223,10 @@ hinttis.updateTable = function(distances, costs) {
 		var titleTag = $('<strong/>', {text:stop, 'class': 'title'});
 		var kmTag = $('<span/>', {text: km , 'class': 'km'});
 		var costTag = $('<strong/>', {text: cost, 'class': 'cost'});
+		var costPerTag = $('<strong/>', {text: costPer, 'class': 'cost_per'});
 		var personsTag = $('<span/>', {'class': 'persons'});
 		for (var person = 1; person <= 4 ; person++) {
-			if (person <= hinttis.getPersons(stopIndex)) {
+			if (person <= persons) {
 				var image = $('<img/>', {'src': 'img/selected.png', 'alt': 'selected', 'class': 'person'});
 			} else {
 				var image = $('<img/>', {'src': 'img/unselected.png', 'alt': 'unselected', 'class': 'person'});
@@ -240,7 +243,7 @@ hinttis.updateTable = function(distances, costs) {
 			personsTag.append(personTag);
 		}
 		
-		table.append($('<tr/>').append($('<td/>').append(titleTag, kmTag, personsTag), $('<td/>', {'class': 'cost'}).append(costTag)));
+		table.append($('<tr/>').append($('<td/>').append(titleTag, kmTag, personsTag), $('<td/>', {'class': 'cost'}).append(costTag, costPerTag)));
 		table.append($('<tr/>').append($('<td/>', {text: address})));
     }
 	
@@ -257,7 +260,7 @@ hinttis.updateTable = function(distances, costs) {
 }
 
 hinttis.setPersons = function(stopIndex, amount) {
-	destinations[stopIndex].persons = parseInt(amount);
+	destinations[parseInt(stopIndex)].persons = parseInt(amount);
 };
 
 hinttis.getPersons = function(stopIndex) {

@@ -22,8 +22,10 @@
 			float:right;
 		}
 		
-		#route_summary_table span.title, 
+		#route_summary_table strong.title, 
 		#route_summary_table span.km,
+		#route_summary_table strong.cost,
+		#route_summary_table strong.cost_per,
 		#route_summary_table span.persons {
 			padding: 0;
 			margin: 0 5px 0 5px;
@@ -38,7 +40,15 @@
 		}
 		
 		#route_summary_table strong.cost:after {
-			content: " €";
+			content: " \20AC";
+		}
+		
+		#route_summary_table strong.cost_per:before {
+			content: "(\00E0  ";
+		}
+
+		#route_summary_table strong.cost_per:after {
+			content: " \20AC)";
 		}
 		
 		#route_summary_table span.persons img.person {
