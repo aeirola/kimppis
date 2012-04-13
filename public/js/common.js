@@ -9,42 +9,61 @@ var common = {};
 * Gets the best route from the given distanec matrix. The best route is the shortest one.
 * Returns an array of indexes which is the sort-array of the order in the matrix
 */
-common.getBestRoute = function(matrix) {
-    var stop_count = matrix.destinationAddresses.length;
+common.getBestRoute = function(matrix, split) {
+	var stop_count = matrix.destinationAddresses.length;
     var stops = [];
     for (var i = 0 ; i < stop_count ; i++) {
         stops.push(i);
     }
-
-    var best_drive = [];
-    var best_cost = null;
-    function recurse(drive, stops) {
-        // Permutationing
-        if (stops.length) {
-            for (var i = 0 ; i < stops.length ;  i++) {
-                var own_drive = drive.slice();
-                own_drive.push(stops[i]);
-                recurse(own_drive, stops.slice(0,i).concat(stops.slice(i+1)));
-            }
-        } else {
-            // Get cost
-            var cost = 0;
-            var prev = -1;
-            for (var d in drive) {
-                var element = matrix.rows[prev+1].elements[drive[d]];
-                cost += element.distance.value;
-                prev = drive[d];
-            }
-            if (!best_cost || cost < best_cost) {
-                best_drive = drive;
-                best_cost = cost;
-            }
-        }
-    }
 	
-    recurse([], stops);
-	return best_drive;
+    drive_data = common.driveRecursion([], stops, matrix, split);
+	return drive_data.drive;
 }
+
+common.driveRecursion = function(drive, stops, matrix, split) {
+    // Permutationing
+    if (stops.length) {
+		var best = {'cost': Infinity};
+        for (var i = 0 ; i < stops.length ;  i++) {
+            var newDrive = drive.slice();
+			newDrive.push(stops[i]);
+			var stopsLeft = stops.slice(0,i).concat(stops.slice(i+1));
+			
+            // Dont split
+			var drive_data = common.driveRecursion(newDrive, stopsLeft, matrix, split);
+			best = drive_data.cost < best.cost ? drive_data : best;
+			
+			if (split) {
+				// Or split into
+	            var drive_data_split = common.driveRecursion(newDrive, [], matrix, split);
+				// and
+	            var drive_data_aux = common.driveRecursion([], stopsLeft, matrix, split);
+			
+				drive_data_split.cost += drive_data_aux.cost;
+				drive_data_split.drive.push.apply(drive_data_split.drive, drive_data_aux.drive);
+				best = drive_data_split.cost < best.cost ? drive_data_split : best;
+			}
+        }
+		
+		return best;
+    } else {
+        // Get cost
+        var cost = 0;
+        var prev = -1;
+        for (var d in drive) {
+            var element = matrix.rows[prev+1].elements[drive[d]];
+            cost += element.distance.value;
+            prev = drive[d];
+        }
+		
+		if (split) {
+			drive = [drive]
+		}
+		
+		return {'drive': drive, 'cost': cost};
+    }
+}
+
 
 /**
 * Gets the distances of the given best route in the distance matrix.

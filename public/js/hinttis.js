@@ -13,9 +13,9 @@ var distanceMatrix = null;
 var bestRoute = null;
 var map = null;
 
-var directionsService;
-var directionsRenderer;
 var distanceMatrixService;
+var directionsService = new google.maps.DirectionsService();
+var directionsRenderers = [];
 
 /*
  * 
@@ -87,17 +87,11 @@ $('#page1').live("pagecreate", function() {
 				
 	            google.maps.event.addListener(marker, 'dragend', hinttis.updateRoute);
             });
-			
-            directionsRenderer = new google.maps.DirectionsRenderer();
-            directionsRenderer.setOptions({
-				suppressMarkers: true,
-                hideRouteList: true
-            });
         }
     });
 	
-    directionsService = new google.maps.DirectionsService();
-    distanceMatrixService = new google.maps.DistanceMatrixService();
+	distanceMatrixService = new google.maps.DistanceMatrixService();
+	directionsService = new google.maps.DirectionsService();
 });
 
 /*
@@ -134,34 +128,88 @@ hinttis.updateRoute = function() {
 	
 	hinttis.getDistanceMatrix(originLatLng, destinationLatLngs, function(matrix) {
 		distanceMatrix = matrix;
-		bestRoute = common.getBestRoute(matrix);
+		bestRoute = common.getBestRoute(matrix, true);
+
+		hinttis.clearDirectionsRenderers();
 		
-		// Create waypoints
-		var waypoints = []
-	    var destination = destinationLatLngs[bestRoute[bestRoute.length-1]];
-	    for (var i = 0; i < bestRoute.length-1; i++) {
-	        waypoints.push({location: destinationLatLngs[bestRoute[i]]});
-	    }
+		for (var route_id in bestRoute) {
+			var route = bestRoute[route_id];
+			
+			// Create waypoints
+			var waypoints = []
+		    var destination = destinationLatLngs[route[route.length-1]];
+		    for (var i = 0; i < route.length-1; i++) {
+		        waypoints.push({location: destinationLatLngs[route[i]]});
+		    }
 		
-	    // Show directions
-	    var directions_request = {
-	        origin: originLatLng,
-	        destination: destination,
-	        waypoints: waypoints,
-	        provideRouteAlternatives: false,
-	        unitSystem: google.maps.UnitSystem.METRIC,
-	        travelMode: google.maps.TravelMode.DRIVING
-	    };
-        directionsService.route(directions_request, function(result, status) {
-	        if (status == google.maps.DirectionsStatus.OK) {
-	            directionsRenderer.setDirections(result);
-				directionsRenderer.setMap(map);
-	        } else {
-	            console.log(status);
-	        }
-	    });
+		    // Show directions
+		    var directions_request = {
+		        origin: originLatLng,
+		        destination: destination,
+		        waypoints: waypoints,
+		        provideRouteAlternatives: false,
+		        unitSystem: google.maps.UnitSystem.METRIC,
+		        travelMode: google.maps.TravelMode.DRIVING
+		    };
+	        directionsService.route(directions_request, function(result, status) {
+		        if (status == google.maps.DirectionsStatus.OK) {
+					var directionsRenderer = hinttis.getDirectionsRenderer(route_id);
+		            directionsRenderer.setDirections(result);
+					directionsRenderer.setMap(map);
+		        } else {
+		            console.log(status);
+		        }
+		    });
+		}
 	});
 };
+
+hinttis.getDirectionsRenderer = function(i) {
+	var color = hinttis.getColor(directionsRenderers.length);
+	
+    var renderer = new google.maps.DirectionsRenderer({
+		suppressMarkers: true,
+        hideRouteList: true,
+		polylineOptions: {
+			strokeColor: color,
+			strokeWeight: 5,
+			strokeOpacity: 0.4
+		}
+    });
+	directionsRenderers.push(renderer);
+	
+	return renderer
+}
+
+hinttis.clearDirectionsRenderers = function() {
+	for (var i in directionsRenderers) {
+		directionsRenderers[i].setMap(null);
+	}
+	
+	directionsRenderers = []
+}
+
+hinttis.getColor = function(i) {
+	switch(i) {
+		case 0:
+		return '#0000FF';
+		case 1:
+		return '#FF0000';
+		case 2:
+		return '#00FF00';
+		case 3:
+		return '#FF00FF';
+		case 4:
+		return '#00FFFF';
+		default:
+		return '#000000';
+	}
+}
+
+hinttis.createDirectionsRenderer = function() {
+	
+	return directionsRenderer;
+}
 
 hinttis.getDistanceMatrix = function(origin, destinations, callback) {
     var origins = [origin];
