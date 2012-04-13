@@ -170,6 +170,7 @@ hinttis.getDirectionsRenderer = function(i) {
     var renderer = new google.maps.DirectionsRenderer({
 		suppressMarkers: true,
         hideRouteList: true,
+		preserveViewport: true,
 		polylineOptions: {
 			strokeColor: color,
 			strokeWeight: 5,
@@ -233,16 +234,20 @@ hinttis.getDistanceMatrix = function(origin, destinations, callback) {
 
 hinttis.updateCosts = function() {
 	// Get distances
-    var distances = common.getDistances(distanceMatrix, bestRoute);
+    var distances = common.getSplitDistances(distanceMatrix, bestRoute);
     
 	// Get persons
 	var persons = []
-	for (var i in destinations) {
-		persons[i] = destinations[i].persons;
+	for (var i in bestRoute) {
+		persons[i] = [];
+		var route = bestRoute[i];
+		for (var j in route) {
+			persons[i][j] = destinations[j].persons;
+		}
 	}
 	
 	// Get costs
-    var costs = common.getCosts(distances, persons);
+    var costs = common.getSplitCosts(distances, persons);
 	
     hinttis.updateTable(distances, costs);
 	
@@ -253,62 +258,71 @@ hinttis.updateTable = function(distances, costs) {
     var table = $('#route_summary_table');
     table.empty();
 	
-	var totalCost = 0;
-	var totalDistance = 0;
-    for (var i in bestRoute ) {
-        var stop = "Stop " + (parseInt(i)+1);
-		var stopIndex = bestRoute[i];
-		var persons = parseInt(hinttis.getPersons(stopIndex));
+	for (var route_id in bestRoute) {
+		var route = bestRoute[route_id];
+		var totalCost = 0;
+		var totalDistance = 0;
 		
-        var km = common.round(distances[i] / 1000);
-		totalDistance += km;
-        var cost = common.round(costs[i]);
-		var costPer = common.round(costs[i] / persons);
-        var address = distanceMatrix.destinationAddresses[bestRoute[i]];
-		
-		totalCost += cost;
-		
-		var titleTag = $('<strong/>', {text:stop, 'class': 'title'});
-		var kmTag = $('<span/>', {text: km , 'class': 'km'});
-		var costTag = $('<strong/>', {text: cost, 'class': 'cost'});
-		if (persons > 1) {
-			var costPerTag = $('<strong/>', {text: costPer, 'class': 'cost_per'});
-		} else {
-			var costPerTag = null;
+		if (bestRoute.length > 1) {
+			var taxiTag = $('<strong/>', {text: "Taxi " + (parseInt(route_id)+1)});
+			table.append($('<tr/>').append($('<td/>', {'class':'taxi_title'}).append(taxiTag)));	
 		}
-		var personsTag = $('<span/>', {'class': 'persons'});
-		for (var person = 1; person <= 4 ; person++) {
-			if (person <= persons) {
-				var image = $('<img/>', {'src': 'img/selected.png', 'alt': 'selected', 'class': 'person'});
+		
+	    for (var stop_id in route ) {
+		    var stop = "Stop " + (parseInt(stop_id)+1);
+			var stopIndex = route[stop_id];
+			var persons = parseInt(hinttis.getPersons(stopIndex));
+		
+	        var km = common.round(distances[route_id][stop_id] / 1000);
+			totalDistance += km;
+	        var cost = common.round(costs[route_id][stop_id]);
+			var costPer = common.round(costs[route_id][stop_id] / persons);
+	        var address = distanceMatrix.destinationAddresses[stopIndex];
+		
+			totalCost += cost;
+		
+			var titleTag = $('<strong/>', {text:stop, 'class': 'title'});
+			var kmTag = $('<span/>', {text: km , 'class': 'km'});
+			var costTag = $('<strong/>', {text: cost, 'class': 'cost'});
+			if (persons > 1) {
+				var costPerTag = $('<strong/>', {text: costPer, 'class': 'cost_per'});
 			} else {
-				var image = $('<img/>', {'src': 'img/unselected.png', 'alt': 'unselected', 'class': 'person'});
+				var costPerTag = null;
 			}
-			var personTag = $('<a/>', {
-				'href': '#',
-				'data-index': stopIndex,
-				'data-persons': person,
-				click: function(){
-					hinttis.setPersons($(this).attr('data-index'), $(this).attr('data-persons'));
-					hinttis.updateCosts();
+			var personsTag = $('<span/>', {'class': 'persons'});
+			for (var person = 1; person <= 4 ; person++) {
+				if (person <= persons) {
+					var image = $('<img/>', {'src': 'img/selected.png', 'alt': 'selected', 'class': 'person'});
+				} else {
+					var image = $('<img/>', {'src': 'img/unselected.png', 'alt': 'unselected', 'class': 'person'});
 				}
-			}).append(image);
-			personsTag.append(personTag);
-		}
+				var personTag = $('<a/>', {
+					'href': '#',
+					'data-index': stopIndex,
+					'data-persons': person,
+					click: function(){
+						hinttis.setPersons($(this).attr('data-index'), $(this).attr('data-persons'));
+						hinttis.updateCosts();
+					}
+				}).append(image);
+				personsTag.append(personTag);
+			}
 		
-		table.append($('<tr/>').append($('<td/>').append(titleTag, kmTag, personsTag), $('<td/>', {'class': 'cost'}).append(costTag)));
-		table.append($('<tr/>').append($('<td/>', {text: address, 'class': 'address'}), $('<td/>', {'class': 'cost_per'}).append(costPerTag)));
-    }
+			table.append($('<tr/>').append($('<td/>').append(titleTag, kmTag, personsTag), $('<td/>', {'class': 'cost'}).append(costTag)));
+			table.append($('<tr/>').append($('<td/>', {text: address, 'class': 'address'}), $('<td/>', {'class': 'cost_per'}).append(costPerTag)));
+	    }
 	
-    // Separator
-    table.append($('<tr/>').append($('<td/>', {'colspan': '2'}).append($('<hr/>'))));
+	    // Separator
+	    table.append($('<tr/>').append($('<td/>', {'colspan': '2'}).append($('<hr/>'))));
 	
-	// Totals
-    totalDistance = common.round(totalDistance);
-    totalCost = common.round(totalCost);
-	var totalTitleTag = $('<strong/>', {text: 'TOTAL'});
-	var totalKmTag = $('<span/>', {text: totalDistance, 'class': 'km'});
-	var totalCostTag = $('<strong/>', {text: totalCost, 'class': 'cost'});
-	table.append($('<tr/>').append($('<td/>').append(totalTitleTag, totalKmTag), $('<td/>', {'class': 'cost'}).append(totalCostTag)));
+		// Totals
+	    totalDistance = common.round(totalDistance);
+	    totalCost = common.round(totalCost);
+		var totalTitleTag = $('<strong/>', {text: 'TOTAL'});
+		var totalKmTag = $('<span/>', {text: totalDistance, 'class': 'km'});
+		var totalCostTag = $('<strong/>', {text: totalCost, 'class': 'cost'});
+		table.append($('<tr/>').append($('<td/>').append(totalTitleTag, totalKmTag), $('<td/>', {'class': 'cost'}).append(totalCostTag)));
+	}
 }
 
 hinttis.setPersons = function(stopIndex, amount) {

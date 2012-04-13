@@ -400,7 +400,7 @@ $('#page7').live("pageshow", function() {
 });
         
 $('#page7').live("pagecreate", function() {
-    $('#route_map_canvas').gmap( { center: kimppis.getLatLng(), 
+    $('#route_map_canvas').gmap( { center: common.getLatLng(), 
                                  zoom: 11, 
                                  mapTypeControl: false,
                                  keyboardShortcuts: false,

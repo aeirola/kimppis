@@ -83,6 +83,24 @@ common.getDistances = function(matrix, bestRoute) {
 	return distances;
 }
 
+common.getSplitDistances = function(matrix, bestSplit) {
+	var distances = [];
+	for (var i in bestSplit) {
+		distances.push(common.getDistances(matrix, bestSplit[i]));
+	}
+	
+	return distances;
+}
+
+common.getSplitCosts = function(distances, persons) {
+	var costs = [];
+	for (var i in distances) {
+		costs.push(common.getCosts(distances[i], persons[i]));
+	}
+	
+	return costs;
+}
+
 /**
 * Calculates the costs of the number of persons given travelling the distances given.
 * Returns an array of costs
