@@ -53,12 +53,12 @@ $('#page1').live("pagecreate", function() {
 			positionSuccess = function(position) {
 				var markerPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
 				createOriginMarker(markerPosition);
-			}
+			};
 			
 			positionError = function() {
 				var markerPosition = common.getLatLng();
 				createOriginMarker(markerPosition);
-			}
+			};
 			
 			navigator.geolocation.getCurrentPosition(positionSuccess, positionError, {maximumAge: 60000, timeout: 1000});
             
@@ -107,6 +107,14 @@ $('#page2').live("pageshow", function() {
 	hinttis.updateCosts();
 });
 
+
+$('#page2').live("pagecreate", function() {
+	$('#route_summary_table').on('click', 'a.person_selector', function(){
+		hinttis.setPersons($(this).attr('data-index'), $(this).attr('data-persons'));
+		hinttis.updateCosts();
+	});
+});
+
 /*
 *
 *	Hinttis-specific functions
@@ -136,7 +144,7 @@ hinttis.updateRoute = function() {
 			var route = bestRoute[route_id];
 			
 			// Create waypoints
-			var waypoints = []
+			var waypoints = [];
 		    var destination = destinationLatLngs[route[route.length-1]];
 		    for (var i = 0; i < route.length-1; i++) {
 		        waypoints.push({location: destinationLatLngs[route[i]]});
@@ -151,17 +159,19 @@ hinttis.updateRoute = function() {
 		        unitSystem: google.maps.UnitSystem.METRIC,
 		        travelMode: google.maps.TravelMode.DRIVING
 		    };
-	        directionsService.route(directions_request, function(result, status) {
-		        if (status == google.maps.DirectionsStatus.OK) {
-					var directionsRenderer = hinttis.getDirectionsRenderer(route_id);
-		            directionsRenderer.setDirections(result);
-					directionsRenderer.setMap(map);
-		        } else {
-		            console.log(status);
-		        }
-		    });
+	        directionsService.route(directions_request, hinttis.renderRoute);
 		}
 	});
+};
+
+hinttis.renderRoute = function(result, status) {
+    if (status == google.maps.DirectionsStatus.OK) {
+		var directionsRenderer = hinttis.getDirectionsRenderer();
+        directionsRenderer.setDirections(result);
+		directionsRenderer.setMap(map);
+    } else {
+        console.log(status);
+    }
 };
 
 hinttis.getDirectionsRenderer = function(i) {
@@ -179,16 +189,16 @@ hinttis.getDirectionsRenderer = function(i) {
     });
 	directionsRenderers.push(renderer);
 	
-	return renderer
-}
+	return renderer;
+};
 
 hinttis.clearDirectionsRenderers = function() {
 	for (var i in directionsRenderers) {
 		directionsRenderers[i].setMap(null);
 	}
 	
-	directionsRenderers = []
-}
+	directionsRenderers = [];
+};
 
 hinttis.getColor = function(i) {
 	switch(i) {
@@ -205,12 +215,7 @@ hinttis.getColor = function(i) {
 		default:
 		return '#000000';
 	}
-}
-
-hinttis.createDirectionsRenderer = function() {
-	
-	return directionsRenderer;
-}
+};
 
 hinttis.getDistanceMatrix = function(origin, destinations, callback) {
     var origins = [origin];
@@ -228,21 +233,21 @@ hinttis.getDistanceMatrix = function(origin, destinations, callback) {
             console.log(status);
         }
 		
-		callback(matrix)
+		callback(matrix);
 	});
 };
 
 hinttis.updateCosts = function() {
 	// Get distances
     var distances = common.getSplitDistances(distanceMatrix, bestRoute);
-    
+	
 	// Get persons
-	var persons = []
+	var persons = [];
 	for (var i in bestRoute) {
 		persons[i] = [];
 		var route = bestRoute[i];
 		for (var j in route) {
-			persons[i][j] = destinations[j].persons;
+			persons[i][j] = destinations[route[j]].persons;
 		}
 	}
 	
@@ -250,8 +255,7 @@ hinttis.updateCosts = function() {
     var costs = common.getSplitCosts(distances, persons);
 	
     hinttis.updateTable(distances, costs);
-	
-}
+};
 
 hinttis.updateTable = function(distances, costs) {
     // Populate table
@@ -264,14 +268,14 @@ hinttis.updateTable = function(distances, costs) {
 		var totalDistance = 0;
 		
 		if (bestRoute.length > 1) {
-			var taxiTag = $('<strong/>', {text: "Taxi " + (parseInt(route_id)+1)});
+			var taxiTag = $('<strong/>', {text: "Taxi " + (parseInt(route_id, 10)+1)});
 			table.append($('<tr/>').append($('<td/>', {'class':'taxi_title'}).append(taxiTag)));	
 		}
 		
 	    for (var stop_id in route ) {
-		    var stop = "Stop " + (parseInt(stop_id)+1);
+		    var stop = "Stop " + (parseInt(stop_id, 10)+1);
 			var stopIndex = route[stop_id];
-			var persons = parseInt(hinttis.getPersons(stopIndex));
+			var persons = parseInt(hinttis.getPersons(stopIndex), 10);
 		
 	        var km = common.round(distances[route_id][stop_id] / 1000);
 			totalDistance += km;
@@ -284,26 +288,25 @@ hinttis.updateTable = function(distances, costs) {
 			var titleTag = $('<strong/>', {text:stop, 'class': 'title'});
 			var kmTag = $('<span/>', {text: km , 'class': 'km'});
 			var costTag = $('<strong/>', {text: cost, 'class': 'cost'});
+			var costPerTag;
 			if (persons > 1) {
-				var costPerTag = $('<strong/>', {text: costPer, 'class': 'cost_per'});
+				costPerTag = $('<strong/>', {text: costPer, 'class': 'cost_per'});
 			} else {
-				var costPerTag = null;
+				costPerTag = null;
 			}
 			var personsTag = $('<span/>', {'class': 'persons'});
+			var image;
 			for (var person = 1; person <= 4 ; person++) {
 				if (person <= persons) {
-					var image = $('<img/>', {'src': 'img/selected.png', 'alt': 'selected', 'class': 'person'});
+					image = $('<img/>', {'src': 'img/selected.png', 'alt': 'selected', 'class': 'person'});
 				} else {
-					var image = $('<img/>', {'src': 'img/unselected.png', 'alt': 'unselected', 'class': 'person'});
+					image = $('<img/>', {'src': 'img/unselected.png', 'alt': 'unselected', 'class': 'person'});
 				}
 				var personTag = $('<a/>', {
 					'href': '#',
 					'data-index': stopIndex,
 					'data-persons': person,
-					click: function(){
-						hinttis.setPersons($(this).attr('data-index'), $(this).attr('data-persons'));
-						hinttis.updateCosts();
-					}
+					'class': 'person_selector'
 				}).append(image);
 				personsTag.append(personTag);
 			}
@@ -323,12 +326,12 @@ hinttis.updateTable = function(distances, costs) {
 		var totalCostTag = $('<strong/>', {text: totalCost, 'class': 'cost'});
 		table.append($('<tr/>').append($('<td/>').append(totalTitleTag, totalKmTag), $('<td/>', {'class': 'cost'}).append(totalCostTag)));
 	}
-}
+};
 
 hinttis.setPersons = function(stopIndex, amount) {
-	destinations[parseInt(stopIndex)].persons = parseInt(amount);
+	destinations[parseInt(stopIndex, 10)].persons = parseInt(amount, 10);
 };
 
 hinttis.getPersons = function(stopIndex) {
 	return destinations[stopIndex].persons;
-}
+};

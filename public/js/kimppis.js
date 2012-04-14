@@ -241,7 +241,7 @@ function handle_route(route_data) {
 		
         // Sort requests
         var sorted_requests = [];
-        for (i in best_drive) {
+        for (var i in best_drive) {
             sorted_requests.push(requests[best_drive[i]]);
         }
         requests = sorted_requests;
@@ -262,7 +262,7 @@ function handle_route(route_data) {
         route_points = [];
         var total_distance = 0;
         var total_cost = 0;
-        for (i in requests) {
+        for (var i in requests) {
             route_points[i] = {
                 request: requests[i],
                 distance: distances[i],
@@ -455,7 +455,7 @@ kimppis.drawRoute = function() {
             console.log(status);
         }
     });
-}
+};
 
 /*
 *
@@ -463,7 +463,7 @@ kimppis.drawRoute = function() {
 */
 kimppis.buildLatLng = function(position) {
     return new google.maps.LatLng(position[1], position[0]);
-}
+};
         
 kimppis.latLngToString = function(latlng, callback) {
     if (!latlng) {
@@ -498,7 +498,7 @@ kimppis.latLngToString = function(latlng, callback) {
             console.log("Geocoder failed due to: " + status);
         }
     });
-}
+};
         
 // Analytics
 $('[data-role=page]').live('pageshow', function (event, ui) {

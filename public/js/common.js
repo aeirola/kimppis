@@ -18,7 +18,7 @@ common.getBestRoute = function(matrix, split) {
 	
     drive_data = common.driveRecursion([], stops, matrix, split);
 	return drive_data.drive;
-}
+};
 
 common.driveRecursion = function(drive, stops, matrix, split) {
     // Permutationing
@@ -34,8 +34,8 @@ common.driveRecursion = function(drive, stops, matrix, split) {
 			best = drive_data.cost < best.cost ? drive_data : best;
 			
 			if (split) {
-				// Or split into
-	            var drive_data_split = common.driveRecursion(newDrive, [], matrix, split);
+                // Or split into
+                var drive_data_split = common.driveRecursion(newDrive, [], matrix, split);
 				// and
 	            var drive_data_aux = common.driveRecursion([], stopsLeft, matrix, split);
 			
@@ -57,12 +57,12 @@ common.driveRecursion = function(drive, stops, matrix, split) {
         }
 		
 		if (split) {
-			drive = [drive]
+			drive = [drive];
 		}
 		
 		return {'drive': drive, 'cost': cost};
     }
-}
+};
 
 
 /**
@@ -81,7 +81,7 @@ common.getDistances = function(matrix, bestRoute) {
     }
 	
 	return distances;
-}
+};
 
 common.getSplitDistances = function(matrix, bestSplit) {
 	var distances = [];
@@ -90,7 +90,7 @@ common.getSplitDistances = function(matrix, bestSplit) {
 	}
 	
 	return distances;
-}
+};
 
 common.getSplitCosts = function(distances, persons) {
 	var costs = [];
@@ -99,7 +99,7 @@ common.getSplitCosts = function(distances, persons) {
 	}
 	
 	return costs;
-}
+};
 
 /**
 * Calculates the costs of the number of persons given travelling the distances given.
@@ -108,9 +108,9 @@ common.getSplitCosts = function(distances, persons) {
 common.getCosts = function(distances, persons) {
 	// Default persons to 1
 	if (!persons) {
-		persons = []
+		persons = [];
 		for (var i in distances) {
-			persons.push(1)
+			persons.push(1);
 		}
 	}
 	
@@ -143,7 +143,7 @@ common.getCosts = function(distances, persons) {
         total_persons -= persons[i];
     }
     return prices;
-}
+};
 
 /**
 * Calculates the start price for the given day.
@@ -169,7 +169,7 @@ common.getStartPrice = function(date) {
     } else {
         return (hour >= 6 && hour < 20) ? NORMAL_PRICE : HIGH_PRICE;
     }
-}
+};
 
 common.getKmPrice = function(persons) {
 	switch (persons) {
@@ -186,7 +186,7 @@ common.getKmPrice = function(persons) {
 	default:
 		return 2.01;
 	}
-}
+};
 
 /**
 * Rounds the given value to 2 decimals
@@ -203,7 +203,7 @@ common.getLatLng = function() {
         return new google.maps.LatLng(google.loader.ClientLocation.latitude, google.loader.ClientLocation.longitude);    
     }
     return new google.maps.LatLng(60.195132,24.933472);
-}
+};
 
 
 /*
