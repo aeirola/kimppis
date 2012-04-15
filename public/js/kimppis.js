@@ -279,9 +279,9 @@ function handle_route(route_data) {
         difference = normal_cost - kimppis_cost;
                         
         // Update values
-        $('#kimppis_price').html(Math.round(kimppis_cost*100)/100);
-        $('#normal_price').html(Math.round(normal_cost*100)/100);
-        $('#saved_price').html(Math.round(difference*100)/100);
+        $('#kimppis_price').html(kimppis_cost.toFixed(2));
+        $('#normal_price').html(normal_cost.toFixed(2));
+        $('#saved_price').html(difference.toFixed(2));
     });
 }
         
@@ -370,19 +370,19 @@ $('#page6').live("pageshow", function() {
         }
         var route_point = route_points[i];
         var km = route_point.distance / 1000;
-        var cost = Math.round(route_point.cost*100)/100;
+        var cost = route_point.cost;
         var address = route_point.request.destination_string;
                 
-        table.append('<tr><td><strong>' + buddy + '</strong> (' + km + ' km)</td><td style="float:right;"><strong>' + 
-                                                cost + ' €</strong></td></tr>');
+        table.append('<tr><td><strong>' + buddy + '</strong> (' + km.toFixed(1) + ' km)</td><td style="float:right;"><strong>' + 
+                                                cost.toFixed(2) + ' €</strong></td></tr>');
         table.append('<tr><td colspan="2">' + address + '</td></tr>');
         table.append('<tr><td colspan="2"><hr /></td></tr>');
     }
             
     var total_km = total_data.distance / 1000;
-    var total_cost = Math.round(total_data.cost*100)/100;
-    table.append('<tr><td><strong>TOTAL</strong> ('+ total_km +' km)</td>'+
-                 '<td style="float:right;"><strong>' + total_cost + ' €</strong></td></tr>');
+    var total_cost = total_data.cost;
+    table.append('<tr><td><strong>TOTAL</strong> ('+ total_km.toFixed(1) +' km)</td>'+
+                 '<td style="float:right;"><strong>' + total_cost.toFixed(2) + ' €</strong></td></tr>');
     table.append('<tr><td></td><td></td></tr>');
 });
          

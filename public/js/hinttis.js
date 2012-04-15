@@ -277,20 +277,20 @@ hinttis.updateTable = function(distances, costs) {
 			var stopIndex = route[stop_id];
 			var persons = parseInt(hinttis.getPersons(stopIndex), 10);
 		
-	        var km = common.round(distances[route_id][stop_id] / 1000);
+	        var km = distances[route_id][stop_id] / 1000;
 			totalDistance += km;
-	        var cost = common.round(costs[route_id][stop_id]);
-			var costPer = common.round(costs[route_id][stop_id] / persons);
+	        var cost = costs[route_id][stop_id];
+			var costPer = costs[route_id][stop_id] / persons;
 	        var address = distanceMatrix.destinationAddresses[stopIndex];
 		
 			totalCost += cost;
 		
 			var titleTag = $('<strong/>', {text:stop, 'class': 'title'});
-			var kmTag = $('<span/>', {text: km , 'class': 'km'});
-			var costTag = $('<strong/>', {text: cost, 'class': 'cost'});
+			var kmTag = $('<span/>', {text: km.toFixed(1), 'class': 'km'});
+			var costTag = $('<strong/>', {text: cost.toFixed(2), 'class': 'cost'});
 			var costPerTag;
 			if (persons > 1) {
-				costPerTag = $('<strong/>', {text: costPer, 'class': 'cost_per'});
+				costPerTag = $('<strong/>', {text: costPer.toFixed(2), 'class': 'cost_per'});
 			} else {
 				costPerTag = null;
 			}
@@ -319,11 +319,9 @@ hinttis.updateTable = function(distances, costs) {
 	    table.append($('<tr/>').append($('<td/>', {'colspan': '2'}).append($('<hr/>'))));
 	
 		// Totals
-	    totalDistance = common.round(totalDistance);
-	    totalCost = common.round(totalCost);
 		var totalTitleTag = $('<strong/>', {text: 'TOTAL'});
-		var totalKmTag = $('<span/>', {text: totalDistance, 'class': 'km'});
-		var totalCostTag = $('<strong/>', {text: totalCost, 'class': 'cost'});
+		var totalKmTag = $('<span/>', {text: totalDistance.toFixed(1), 'class': 'km'});
+		var totalCostTag = $('<strong/>', {text: totalCost.toFixed(2), 'class': 'cost'});
 		table.append($('<tr/>').append($('<td/>').append(totalTitleTag, totalKmTag), $('<td/>', {'class': 'cost'}).append(totalCostTag)));
 	}
 };

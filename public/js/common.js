@@ -188,13 +188,6 @@ common.getKmPrice = function(persons) {
 };
 
 /**
-* Rounds the given value to 2 decimals
-*/
-common.round = function(value) {
-	return Math.round(value*100)/100;
-};
-
-/**
 * Returns a close latLng
 */
 common.getLatLng = function() {
