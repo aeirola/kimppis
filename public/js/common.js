@@ -29,19 +29,18 @@ common.driveRecursion = function(drive, stops, matrix, split) {
 			newDrive.push(stops[i]);
 			var stopsLeft = stops.slice(0,i).concat(stops.slice(i+1));
 			
-            // Dont split
+            // Unsplitted cost
 			var drive_data = common.driveRecursion(newDrive, stopsLeft, matrix, split);
 			best = drive_data.cost < best.cost ? drive_data : best;
 			
-			if (split) {
-                // Or split into
-                var drive_data_split = common.driveRecursion(newDrive, [], matrix, split);
-				// and
-	            var drive_data_aux = common.driveRecursion([], stopsLeft, matrix, split);
-			
-				drive_data_split.cost += drive_data_aux.cost;
-				drive_data_split.drive.push.apply(drive_data_split.drive, drive_data_aux.drive);
-				best = drive_data_split.cost < best.cost ? drive_data_split : best;
+			// Splitted cost
+			if (split && newDrive < stopsLeft) {
+                var split_first = common.driveRecursion(newDrive, [], matrix, split);
+	            var split_second = common.driveRecursion([], stopsLeft, matrix, split);
+				
+				split_first.cost += split_second.cost;
+				split_first.drive.push.apply(split_first.drive, split_second.drive);
+				best = split_first.cost < best.cost ? split_first : best;
 			}
         }
 		
@@ -163,7 +162,7 @@ common.getStartPrice = function(date) {
     var eve = common.eves[dateString] || (day === 6);
             
     if (holiday) {
-        return HI;
+        return HIGH_PRICE;
     } else if (eve) {
         return (hour >= 6 && hour < 16) ? NORMAL_PRICE : HIGH_PRICE;
     } else {

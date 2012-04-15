@@ -231,9 +231,9 @@ hinttis.getDistanceMatrix = function(origin, destinations, callback) {
     }, function(matrix, status) {
         if (status != google.maps.DistanceMatrixStatus.OK) {
             console.log(status);
+        } else {
+			callback(matrix);
         }
-		
-		callback(matrix);
 	});
 };
 
