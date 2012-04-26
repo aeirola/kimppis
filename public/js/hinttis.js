@@ -337,7 +337,7 @@ hinttis.getPersons = function(stopIndex) {
 // Analytics
 $('[data-role=page]').live('pageshow', function (event, ui) {
     try {
-        _gaq.push(['_setAccount', 'YOUR_GA_ID']);
+		_gaq.push(['_setAccount', 'UA-29879942-1']);
 
         hash = location.hash;
 
