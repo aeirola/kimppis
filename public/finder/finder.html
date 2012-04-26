@@ -11,9 +11,21 @@
 		/* App custom styles */
 		  
 		body, div.content {
-			height: 100%;
+			position: absolute;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
 		}
-		  
+		
+		#map_canvas, #route_map_canvas {
+			position: absolute;
+			top: 50px;
+			bottom: 10px;
+			left: 10px;
+			right: 10px;
+		}
+		
 		td {
 			padding: 0px 10px 5px 0px;
 			vertical-align: top;	
@@ -56,7 +68,7 @@
 			</a>
 		</div>
 		<div class="content" data-role="content">
-			<div id="map_canvas" style="width:100%;height:90%"></div>
+			<div id="map_canvas"></div>
 		</div>
 	</div>
 	
@@ -237,7 +249,7 @@
 			</a>
 		</div>
 		<div class="content" data-role="content">
-			<div id="route_map_canvas" style="width:100%;height:90%"></div>
+			<div id="route_map_canvas"></div>
 		</div>
 	</div>
 	
