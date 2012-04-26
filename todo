@@ -1,6 +1,3 @@
-Both:
- - Fix google maps size definitions
-
 Kimppis:
  - Unnecessary updates to gmaps: When polling for updates to route, the client also does a Gmap update even though the route hasn't changed.
 
@@ -8,7 +5,6 @@ Hinttis:
  - Show money saved vs. lone taksi
  - Show estimated taxi fare at stops
  - Somehow enter the starting fare time, jQuery timeslector?
- - Add analytics
  
 Common:
  - Holidays for every year
