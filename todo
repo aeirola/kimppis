@@ -1,13 +1,21 @@
+Both:
+ - Fix google maps size definitions
+
 Kimppis:
  - Unnecessary updates to gmaps: When polling for updates to route, the client also does a Gmap update even though the route hasn't changed.
 
 Hinttis:
- - Split into multiple taxis
  - Show money saved vs. lone taksi
  - Show estimated taxi fare at stops
  - Somehow enter the starting fare time, jQuery timeslector?
- - Handle missing location
+ - Add analytics
  
 Common:
  - Holidays for every year
- - Fix km-cost function
+ - Price split types:
+  + Even split
+  + According to distance in taxi
+  + According to distance form origin
+
+
+

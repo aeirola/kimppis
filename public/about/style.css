@@ -6,7 +6,7 @@
 html,body {
   margin:0;
   padding:0;
-  background: #1a1a1a url('../images/tausta.jpg') no-repeat fixed 50% 0;
+  background: #1a1a1a url('img/tausta.jpg') no-repeat fixed 50% 0;
   height:100%;
   }
 

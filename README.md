@@ -8,7 +8,7 @@ Kimppis is a smart service that connects taxi passengers going the same directio
 
 Where
 ------
-Kimppis is available for public use NOW at http://www.kimppis.com Also check out Hinttis at http://www.kimppis.com/hinttis
+Kimppis is available for public use NOW at http://www.kimppis.com
 
 
 How

@@ -333,3 +333,21 @@ hinttis.setPersons = function(stopIndex, amount) {
 hinttis.getPersons = function(stopIndex) {
 	return destinations[stopIndex].persons;
 };
+
+// Analytics
+$('[data-role=page]').live('pageshow', function (event, ui) {
+    try {
+        _gaq.push(['_setAccount', 'YOUR_GA_ID']);
+
+        hash = location.hash;
+
+        if (hash) {
+            _gaq.push(['_trackPageview', hash.substr(1)]);
+        } else {
+            _gaq.push(['_trackPageview']);
+        }
+    } catch(err) {
+        console.log(err);
+    }
+});
+
