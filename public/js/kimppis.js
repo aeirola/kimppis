@@ -396,6 +396,7 @@ $('#page7').live("pageshow", function() {
         return;
     }
     
+	google.maps.event.trigger(route_map, 'resize');
     kimppis.drawRoute();
 });
         
@@ -410,6 +411,7 @@ $('#page7').live("pagecreate", function() {
                                  streetViewControl: false,
                                  callback: 
         function (map) {
+			route_map = map;
             directionsRenderer = new google.maps.DirectionsRenderer();
             directionsRenderer.setOptions({
                 map: map,
