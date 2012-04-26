@@ -1,6 +1,6 @@
 // Constants
 var REST_PATH = '/rest';
-//var REST_PATH = 'http://localhost:8124/rest';
+var REST_PATH = 'http://localhost:8124/rest';
 
 // Variables
 var settings_persons = 1;
@@ -275,7 +275,7 @@ function handle_route(route_data) {
         total_data.cost = total_cost;
                 
         kimppis_cost = costs[own_index];
-        normal_cost = common.getCosts([matrix.rows[0].elements[own_index].distance.value], [request.persons]);
+        normal_cost = common.getCosts([matrix.rows[0].elements[own_index].distance.value], [request.persons])[0];
         difference = normal_cost - kimppis_cost;
                         
         // Update values
