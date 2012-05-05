@@ -68,12 +68,12 @@ common.driveRecursion = function(drive, stops, matrix, split) {
 * Gets the distances of the given best route in the distance matrix.
 * Returns an array of distances (not the cumulative distance)
 */
-common.getDistances = function(matrix, bestRoute) {
+common.getDistances = function(matrix, route) {
 	// Get distances
     var distances = [];
     var prev = 0;
-    for (var i in bestRoute) {
-		var current = bestRoute[i];
+    for (var i in route) {
+		var current = route[i];
         var distance = matrix.rows[prev].elements[current].distance.value;
         distances.push(distance);
 		prev = current + 1;
@@ -91,25 +91,124 @@ common.getSplitDistances = function(matrix, bestSplit) {
 	return distances;
 };
 
-common.getSplitCosts = function(distances, persons) {
+common.getSplitCosts = function(matrix, bestSplit, persons) {
 	var costs = [];
-	for (var i in distances) {
-		costs.push(common.getCosts(distances[i], persons[i]));
+	for (var i in bestSplit) {
+		costs.push(common.getCosts(matrix, bestSplit[i], persons[i]));
 	}
 	
 	return costs;
 };
 
 /**
+*	Get costs of single route in matrix
+*/
+common.getCosts = function(matrix, route, persons) {
+	//return common.getCostsByFixedRatio(matrix, route, persons);
+	//return common.getCostsByFixedPersonsRatio(matrix, route, persons);
+	//return common.getCostsByPathDistanceRatio(matrix, route, persons);
+	return common.getCostsByDirectDistanceRatio(matrix, route, persons);
+};
+
+/**
+*	Get even split cost per stop
+*/
+common.getCostsByFixedRatio = function(matrix, route, persons) {
+	// Get distances
+	var distances = common.getDistances(matrix, route);
+	
+	return common.getCostsByRatio(distances, persons);
+};
+
+/**
+*	Even split cost per person
+*/
+common.getCostsByFixedPersonsRatio = function(matrix, route, persons) {
+	// Get distances
+	var distances = common.getDistances(matrix, route);
+
+	return common.getCostsByRatio(distances, persons, persons);
+};
+
+
+/**
 * Calculates the costs of the number of persons given travelling the distances given.
 * Returns an array of costs
 */
-common.getCosts = function(distances, persons) {
+common.getCostsByPathDistanceRatio = function(matrix, route, persons) {
+	// Get distances
+	var distances = common.getDistances(matrix, route);
+	
+	// Get ratio
+	var ratios = [];
+	var totalDistance = 0;
+	for (var i in distances) {
+		totalDistance += distances[i];
+		ratios[i] = totalDistance*persons[i];
+	}
+	
+	return common.getCostsByRatio(distances, persons, ratios);
+};
+
+/**
+*	Get cost split by the respective distance from the origin
+*/
+common.getCostsByDirectDistanceRatio = function(matrix, route, persons) {
+	// Get ratios
+	var ratios = [];
+	for (var i in route) {
+        ratios[i] = matrix.rows[0].elements[route[i]].distance.value * persons[i];
+	}
+	
+	// Get distances
+	var distances = common.getDistances(matrix, route);
+
+	return common.getCostsByRatio(distances, persons, ratios);
+}
+
+common.getCostsByRatio = function(distances, persons, ratios) {
+	// Get normalized ratios
+	var i;
+	var totalRatio = 0;
+	var normalizedRatios = [];
+	
+	if (ratios) {
+		for (i in ratios) {
+			totalRatio += ratios[i];
+		}
+	} else {
+		ratios = []
+		for (var i in distances) {
+			ratios[i] = 1;
+			totalRatio += 1;
+		}
+	}
+	
+	for (i in ratios) {
+		normalizedRatios[i] = ratios[i] / totalRatio;
+	}
+	
+	
+	var cost = common.getRouteCost(distances, persons)
+	
+	// Split costs
+    var costs = [];
+    for (var i in persons) {
+        costs[i] = cost * normalizedRatios[i];
+    }
+    
+    return costs;
+};
+
+/**
+*	Get the total cost for a trip with the given distances and persons
+*/
+common.getRouteCost = function(distances, persons) {
 	// Default persons to 1
 	if (!persons) {
 		persons = [];
-		for (var i in distances) {
-			persons.push(1);
+		for (i in distances) {
+			persons[i] = 1;
 		}
 	}
 	
@@ -118,31 +217,22 @@ common.getCosts = function(distances, persons) {
     for (var i in persons) {
         total_persons += persons[i];
     }
-    
-    var prices = [];
-    
-    // Starting price
-    var starting_price = common.getStartPrice();
-    for (var i in persons) {
-        prices[i] = (starting_price * persons[i]) / total_persons;
-    }
-    
-	// KM prices       
-    for (var i in distances) {
+	
+    // Starting cost
+    var cost = common.getStartPrice();
+	
+	// KM cost
+    for (i in distances) {
 		// Calculate leg cost
 		var pricePerKm = common.getKmPrice(total_persons) * 1.1;
-		var leg_cost = (distances[i] * pricePerKm)/1000;
+		cost += (distances[i] * pricePerKm)/1000;
         
-		// Divide according to number of persons per leg
-		for (var j = i ; j < prices.length ; j++) {
-            prices[j] += (leg_cost * persons[j]) / total_persons;
-        }
-		
 		// Remove leaving persons
         total_persons -= persons[i];
     }
-    return prices;
-};
+	
+	return cost;
+}
 
 /**
 * Calculates the start price for the given day.

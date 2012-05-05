@@ -257,7 +257,13 @@ function handle_route(route_data) {
             }
         }
         
-        costs = common.getCosts(distances);
+		// Get persons
+		var persons = [];
+		for (var i in requests) {
+			persons[i] = requests[i].persons
+		}
+		
+        costs = common.getCosts(matrix, best_drive, persons);
                 
         route_points = [];
         var total_distance = 0;
@@ -273,15 +279,17 @@ function handle_route(route_data) {
         }
         total_data.distance = total_distance;
         total_data.cost = total_cost;
-                
+        
         kimppis_cost = costs[own_index];
-        normal_cost = common.getCosts([matrix.rows[0].elements[own_index].distance.value], [request.persons])[0];
+        normal_cost = common.getCosts(matrix, [own_index], [request.persons])[0];
         difference = normal_cost - kimppis_cost;
                         
         // Update values
-        $('#kimppis_price').html(kimppis_cost.toFixed(2));
-        $('#normal_price').html(normal_cost.toFixed(2));
-        $('#saved_price').html(difference.toFixed(2));
+		if (kimppis_cost) {
+	        $('#kimppis_price').html(kimppis_cost.toFixed(2));
+	        $('#normal_price').html(normal_cost.toFixed(2));
+	        $('#saved_price').html(difference.toFixed(2));
+		}
     });
 }
         
@@ -298,7 +306,7 @@ function show_cost(address) {
     directionsService.route(directions_request, function(result, status) {
         if (status === google.maps.DirectionsStatus.OK) {
             var distance = result.routes[0].legs[0].distance.value;
-            var cost = common.getCosts([distance], [settings_persons]);
+            var cost = common.getRouteCost([distance], [settings_persons]);
             
             route_points = [{
                 distance: distance,
@@ -492,7 +500,7 @@ kimppis.latLngToString = function(latlng, callback) {
                         break;
                     }
                 }
-                        
+                
                 var string =  postal_code + " " + hood + ", " + city;
                 callback(string);
             }

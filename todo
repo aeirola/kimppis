@@ -5,6 +5,7 @@ Hinttis:
  - Show money saved vs. lone taksi
  - Show estimated taxi fare at stops
  - Somehow enter the starting fare time, jQuery timeslector?
+ - Fuzzify addresses
  
 Common:
  - Holidays for every year
@@ -14,4 +15,5 @@ Common:
   + According to distance form origin
 
 
+Combine hinttis and kimppis into one service.
 

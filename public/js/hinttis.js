@@ -252,7 +252,7 @@ hinttis.updateCosts = function() {
 	}
 	
 	// Get costs
-    var costs = common.getSplitCosts(distances, persons);
+    var costs = common.getSplitCosts(distanceMatrix, bestRoute, persons);
 	
     hinttis.updateTable(distances, costs);
 };
