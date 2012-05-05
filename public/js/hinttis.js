@@ -281,8 +281,8 @@ hinttis.updateTable = function(distances, costs) {
 			totalDistance += km;
 	        var cost = costs[route_id][stop_id];
 			var costPer = costs[route_id][stop_id] / persons;
-	        var address = distanceMatrix.destinationAddresses[stopIndex];
-		
+	        var address = common.fuzzify(distanceMatrix.destinationAddresses[stopIndex]);
+			
 			totalCost += cost;
 		
 			var titleTag = $('<strong/>', {text:stop, 'class': 'title'});

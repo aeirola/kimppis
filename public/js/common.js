@@ -287,6 +287,18 @@ common.getLatLng = function() {
     return new google.maps.LatLng(60.195132,24.933472);
 };
 
+/**
+*	Fuzzifies the given address string into postalcode area, city
+*	addressString must be of format "Kivikonkaari 11, 00940 Helsinki, Finland"
+*/
+common.fuzzify = function(addressString) {
+	var addressParts = addressString.split(",")[1].trim().split(" ");
+	var postalCode = addressParts[0] || "";
+	var city = addressParts[1] || "";
+	var area = common.postalCodeMapping[postalCode] || "";
+	
+	return postalCode + " " + area + ", " + city;
+}
 
 /*
 *
@@ -317,7 +329,7 @@ common.eves = {
     "12.5":  1, // itsenäisyyspäivän aatto
     "12.31": 1  // uudenvuoden aatto
 };
-        
+
 common.postalCodeMapping = {
     '00002': "Helsinki",
     '00010': "Postikeskus",
