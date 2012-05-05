@@ -4,8 +4,7 @@ var REST_PATH = '/rest';
 
 // Variables
 var settings_persons = 1;
-var settings_finder = true;
-        
+
 var position_latLng = null;
 var destination_latLng = null;
         
@@ -92,8 +91,6 @@ $('#radio2').change(function(event) {settings_persons = 2;});
 $('#radio3').change(function(event) {settings_persons = 3;});
 $('#radio4').change(function(event) {settings_persons = 4;});
         
-$('#toggleswitch1').change(function(event) {settings_finder = !settings_finder;});
-        
 /*
  * 
  * Page 3 (Route data)
@@ -111,11 +108,6 @@ $('#page3').live("pageshow", function() {
     // Update form / to
     kimppis.latLngToString(destination_latLng, function(to_address) {
         $('#to_address').html(to_address);
-                
-        if (!settings_finder) {
-            show_cost(to_address);
-            return;
-        }
                 
         var route;
         var request;
@@ -274,7 +266,7 @@ function handle_route(route_data) {
                 distance: distances[i],
                 cost: costs[i]
             };
-            total_distance = distances[i];
+            total_distance += distances[i];
             total_cost += costs[i];
         }
         total_data.distance = total_distance;
@@ -292,46 +284,7 @@ function handle_route(route_data) {
 		}
     });
 }
-        
-function show_cost(address) {
-    var directions_request = {
-            origin: position_latLng,
-            destination: destination_latLng,
-            provideRouteAlternatives: false,
-            unitSystem: google.maps.UnitSystem.METRIC,
-            travelMode: google.maps.TravelMode.DRIVING
-    };
-            
-    // Get single distance
-    directionsService.route(directions_request, function(result, status) {
-        if (status === google.maps.DirectionsStatus.OK) {
-            var distance = result.routes[0].legs[0].distance.value;
-            var cost = common.getRouteCost([distance], [settings_persons]);
-            
-            route_points = [{
-                distance: distance,
-                cost: cost,
-                request: {
-                    origin: position_latLng,
-                    destination: destination_latLng,
-                    destination_string: address
-                }
-            }];
-                    
-            total_data = {
-                distance: distance,
-                cost: cost
-            };
-                    
-            own_index = 0;
-                    
-            $.mobile.changePage($('#page6'));
-        } else {
-            console.log(status);
-        }
-    });
-}
-        
+
 /*
  * 
  * Page 4 (Get ready)
@@ -429,6 +382,11 @@ $('#page7').live("pagecreate", function() {
     });
 });
 
+/*
+*
+*	Kimppis-specific code
+*/
+
 var kimppis = {};
 
 kimppis.drawRoute = function() {
@@ -437,16 +395,8 @@ kimppis.drawRoute = function() {
     var destination;
     var waypoints = [];
     
-    if (settings_finder) {
-        origin = kimppis.buildLatLng(route.stand.position);
-        destination = kimppis.buildLatLng(route_points[route_points.length-1].request.destination);
-        for (var i = 0; i < route_points.length-1; i++) {
-            waypoints.push({location: kimppis.buildLatLng(route_points[i].request.destination)});
-        }
-    } else {
-        origin = route_points[0].request.origin;
-        destination = route_points[0].request.destination;
-    }
+	origin = route_points[0].request.origin;
+    destination = route_points[0].request.destination;
     
     var directions_request = {
         origin: origin,
@@ -467,10 +417,6 @@ kimppis.drawRoute = function() {
     });
 };
 
-/*
-*
-*	Kimppis-specific code
-*/
 kimppis.buildLatLng = function(position) {
     return new google.maps.LatLng(position[1], position[0]);
 };
