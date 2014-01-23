@@ -9,6 +9,6 @@
   "main": "server.js",
   "dependencies": {
       "journey": "0.4.0-pre-3",
-      "mongoose": "2.5.10"
+      "mongoose": "3.8.4"
   }
 }

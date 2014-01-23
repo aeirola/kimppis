@@ -153,7 +153,7 @@ taksi.get_request = function(request_id, callback) {
     var query = Request.findById(request_id);
     //query.populate('route');
     query.populate('stand');
-    query.run(function (err, request) {
+    query.exec(function (err, request) {
         callback(request);
     });
 };
@@ -163,7 +163,7 @@ taksi.get_route = function(route_id, callback) {
     var query = Route.findById(route_id);
     //query.populate('requests');
     query.populate('stand');
-    query.run(function(err, route){
+    query.exec(function(err, route){
         callback(route);
     });
 };
