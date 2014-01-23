@@ -5,7 +5,11 @@ Hinttis:
  - Show money saved vs. lone taksi
  - Show estimated taxi fare at stops
  - Somehow enter the starting fare time, jQuery timeslector?
- - Fuzzify addresses
+ - Help screen
+ - Statistics to server
+ - Check that analytics work
+ - Nicer graphics
+ - Revise the geolocaiton
  
 Common:
  - Holidays for every year
