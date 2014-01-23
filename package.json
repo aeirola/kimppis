@@ -1,6 +1,12 @@
 {
   "name": "kimppis",
   "version": "0.0.1",
+  "description": "kimppis taxi sharing application",
+  "repository": {
+  	"type": "git",
+  	"url": "https://github.com/aeirola/kimppis"
+  },
+  "main": "server.js",
   "dependencies": {
       "journey": "0.4.0-pre-3",
       "mongoose": "2.5.10"

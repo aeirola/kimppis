@@ -16,12 +16,10 @@ var settings = {
     places: 4,
     http: {
         host: '0.0.0.0',
-        port: 8124
+        port: Number(process.env.PORT || 8124)
     },
     db: {
-        database: 'kimppis',
-        host: 'localhost',
-        port: 27017
+        uri: process.env.MONGOLAB_URI || 'mongodb://localhost/kimppis'
     }
 };
 
@@ -290,7 +288,7 @@ init_http = function () {
 };
 
 init_database = function() {
-    mongoose.connect('mongodb://localhost/kimppis');
+    mongoose.connect(settings.db.uri);
     
     // Define schemas
     var Schema = mongoose.Schema;
