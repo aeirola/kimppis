@@ -6,10 +6,10 @@
 	<title>
 	</title>
     <link rel="icon" type="image/png" href="img/kimppis-favicon.png" />
-	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.css" />
+	<link rel="stylesheet" href="//code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.css" />
 	<style>
 		/* App custom styles */
-		  
+
 		body, div.content {
 			position: absolute;
 			top: 0;
@@ -17,7 +17,7 @@
 			left: 0;
 			right: 0;
 		}
-		
+
 		#map_canvas, #route_map_canvas {
 			position: absolute;
 			top: 50px;
@@ -25,23 +25,23 @@
 			left: 10px;
 			right: 10px;
 		}
-		
+
 		td {
 			padding: 0px 10px 5px 0px;
-			vertical-align: top;	
+			vertical-align: top;
 		}
 	</style>
-	<script src="http://www.google.com/jsapi" type="text/javascript"></script>        
+	<script src="//www.google.com/jsapi" type="text/javascript"></script>
 	<script type="text/javascript">
 		google.load("maps", "3", {'other_params':'sensor=true'});
 		google.load("jquery", "1.7");
 	</script>
-	
-	<script src="http://code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.js">
+
+	<script src="//code.jquery.com/mobile/1.0.1/jquery.mobile-1.0.1.min.js">
 	</script>
 	<script src="js/lib/jquery.ui.map.full.min.js" type="text/javascript">
 	</script>
-	
+
 	<!-- Analytics -->
 	<script type="text/javascript">
 
@@ -55,7 +55,7 @@
 	    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
 	  })();
 	</script>
-	
+
 </head>
 <body>
 	<div class="content" data-role="page" id="page1">
@@ -71,7 +71,7 @@
 			<div id="map_canvas"></div>
 		</div>
 	</div>
-	
+
 	<div data-role="page" id="page2">
 		<div data-theme="a" data-role="header">
 			<h3>
@@ -132,7 +132,7 @@
 			-->
 		</div>
 	</div>
-	
+
 	<div data-role="page" id="page3">
 		<div data-theme="a" data-role="header">
 			<h3>
@@ -150,13 +150,13 @@
 				<tr><td><strong>From</strong></td><td id="from_address">Searching...</td></tr>
 				<tr><td><strong>To</strong></td><td id="to_address">Searching...</td></tr>
 				<tr><td></td><td></td></tr>
-					
+
 				<tr class="yksis"><td colspan="2"><h3>Waiting for Kimppis buddies to share a taxi with you!</h3></td></tr>
-				   
+
 				<tr class="kimppis" style="display:none">
 					<td colspan="2"><h3>Found <span id="kimppises">?</span> Kimppis buddies to share a taxi with you!</h3></td>
 				</tr>
-				   
+
 				<tr class="kimppis" style="display:none"><td></td><td></td></tr>
 				<tr class="kimppis" style="display:none"><td><strong>Price</strong></td><td>
 					<table>
@@ -252,7 +252,7 @@
 			<div id="route_map_canvas"></div>
 		</div>
 	</div>
-	
+
 	<!-- Application custom scripting -->
 	<script src="js/kimppis.js"></script>
 	<script src="js/common.js"></script>
