@@ -44,7 +44,7 @@ taksi.add_request = function(callback, incoming_request) {
     var Request = mongoose.model('Request');
     var Route = mongoose.model('Route');
     var Stand = mongoose.model('Stand');
-    
+
     var query = Stand.find({});
     query.near('position', incoming_request.origin);
     query.findOne(function (err, closest_stand) {
@@ -52,7 +52,7 @@ taksi.add_request = function(callback, incoming_request) {
             console.log("No stand found!");
             return;
         }
-        
+
         // Get routes from stand where point near destination
         var query = Request.find({});
         query.where('stand', closest_stand.id);
@@ -62,18 +62,18 @@ taksi.add_request = function(callback, incoming_request) {
         query.gte('date', limit_date);
         query.gte('places', incoming_request.persons);
         query.where('destination').near(incoming_request.destination).maxDistance(1);
-        
+
         query.findOne(function (err, closest_request) {
             if (err) {
                 console.log(err, err.message);
                 return;
             }
-            
+
             var route;
-            
+
             // TODO: Check if feasible at all!
-            
-            
+
+
             if (!closest_request) {
                 // Create route
                 route = new Route();
@@ -121,7 +121,7 @@ taksi.complete_request = function(request_id) {
 
 taksi.remove_request = function(request_id) {
     console.log("remove_request(" + request_id + ")");
-    
+
     taksi.get_request(request_id, function (request) {
         taksi.get_route(request.route, function (route) {
             route.places += request.persons;
@@ -131,7 +131,7 @@ taksi.remove_request = function(request_id) {
             var Request = mongoose.model('Request');
             Request.update({route: route.id}, {places: route.places}, {multi: true});
         });
-        
+
         // Remove requets
         request.remove();
     });
@@ -150,7 +150,7 @@ taksi.get_route_data = function(request_id, callback) {
 
 taksi.get_request = function(request_id, callback) {
     console.log("get_request("+ request_id +")");
-    
+
     var Request = mongoose.model('Request');
     var query = Request.findById(request_id);
     //query.populate('route');
@@ -194,7 +194,7 @@ router.map(function () {
     this.get('/rest/stands').bind(function (req, res) {
         taksi.get_stands(function (ret) {res.send(ret);});
     });
-    
+
     // Get route information (for polling)
     this.get(/^rest\/route\/([a-z0-9]+)$/).bind(function (req, res, route_id) {
         console.log("get_route(" + route_id +")");
@@ -206,30 +206,30 @@ router.map(function () {
             });
         });
     });
-    
+
     /**
     * _POST
     */
-    
+
     // Complete
     this.post(/^rest\/request\/complete\/([a-z0-9]+)$/).bind(function (req, res, request_id, data) {
         taksi.complete_request(request_id);
     });
-    
-    
+
+
     /**
     * _PUT
     */
-    
+
     // Add request
     this.put('/rest/request').bind(function (req, res, data) {
         taksi.add_request(function (ret) {res.send(ret);}, req.json);
     });
-    
+
     /**
     * _DELETE
     */
-    
+
     // Remove request
     this.del(/^rest\/request\/([a-z0-9]+)$/).bind(function (req, res, request_id) {
         taksi.remove_request(request_id);
@@ -264,13 +264,13 @@ init_http = function () {
             });
         } else {
             var filename = path.join(process.cwd(), 'public', uri);
-            path.exists(filename, function(exists) {
+            fs.stat(filename, function(err, stats) {
                 // Serve static content
-                if(exists) {
-                    if (fs.statSync(filename).isDirectory()) {
+                if(stats) {
+                    if (stats.isDirectory()) {
                         filename += '/index.html';
                     }
-                    
+
                     fs.readFile(filename, "binary", function(err, file) {
                         if(err) {
                             response.writeHead(500, {"Content-Type": "text/plain"});
@@ -278,11 +278,14 @@ init_http = function () {
                             response.end();
                             return;
                         }
-                        
+
                         response.writeHead(200);
                         response.write(file, "binary");
                         response.end();
                     });
+                } else {
+                  response.writeHead(404);
+                  response.end();
                 }
             });
         }
@@ -291,20 +294,17 @@ init_http = function () {
 
 init_database = function() {
     mongoose.connect(settings.db.uri);
-    
+
     // Define schemas
     var Schema = mongoose.Schema;
     var ObjectId = Schema.ObjectId;
 
     var Stand = new Schema({
         name        : {type: String, index: true, unique: true},
-        position    : [Number]
-    });
-    Stand.index({
-          position: '2d'
+        position    : {type: [Number], index: '2d'}
     });
     mongoose.model('Stand', Stand);
-    
+
     var Request = new Schema({
         stand       : {type: ObjectId, index: true, ref: 'Stand', required: true},
         route       : {type: ObjectId, index: true, ref: 'Route', required: true},
@@ -312,14 +312,11 @@ init_database = function() {
         date        : {type: Date, 'default': Date.now},
         completed   : {type: Boolean, 'default': false},
         places      : {type: Number, 'default': 4},
-        destination : [{type: Number}],
+        destination : {type: [Number], index: '2d'},
         destination_string : {type: String, 'default': "Unkown"}
     });
-    Request.index({
-          destination: '2d'
-    });
     mongoose.model('Request', Request);
-    
+
     var Route = new Schema({
         stand       : {type: ObjectId, index: true, ref: 'Stand'},
         date        : {type: Date, 'default': Date.now},
@@ -327,7 +324,7 @@ init_database = function() {
         completed   : {type: Boolean, 'default': false}
     });
     mongoose.model('Route', Route);
-    
+
     // Get models
     Stand = mongoose.model('Stand');
     Request = mongoose.model('Request');
@@ -336,7 +333,7 @@ init_database = function() {
     Stand.collection.drop(function() {});
     Request.collection.drop(function() {});
     Route.collection.drop(function() {});
-    
+
     // Add some stands
     new Stand({position: [24.465158    ,60.99512    ], name: "Tuntematon 1"}).save();
     new Stand({position: [24.813309    ,60.219099    ], name: "Leppävaara"}).save();
