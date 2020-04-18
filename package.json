@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "journey": "0.4.0-pre-3",
-    "mongoose": "~3.8.37",
+    "mongoose": "~5.9.9",
     "newrelic": "~1.24.0"
   }
 }
